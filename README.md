@@ -1,5 +1,5 @@
 # Plenoptic-Simulation
-Supplemental material to *T. Michels, A. Petersen, L. Palmieri, R. Koch - "Plenoptic Simulation"* published at TBA.
+Supplemental material to *T. Michels, A. Petersen, L. Palmieri, R. Koch - "Simulation of Plenoptic Cameras"* published at TBA.
 
 <center><img src="/images/preview.jpeg" alt="Rendering example for a plenoptic camera 2.0 setup" width="500" height="500"></center>
 

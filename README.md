@@ -1,5 +1,8 @@
 # Plenoptic-Simulation
-Supplemental material to *T. Michels, A. Petersen, L. Palmieri, R. Koch - "Simulation of Plenoptic Cameras"* published at TBA.
+Supplemental material to
+[Tim Michels](https://www.mip.informatik.uni-kiel.de/en/team/tim-michels-m-sc), [Arne Petersen](https://www.mip.informatik.uni-kiel.de/en/team/dr-ing-arne-petersen), [Luca Palmieri](https://www.mip.informatik.uni-kiel.de/en/team/luca-palmieri-m-sc), Reinhard Koch
+Simulation of Plenoptic Cameras
+3DTV Conference, 2018. (accepted, to appear) [Preprint](http://data.mip.informatik.uni-kiel.de:555/wwwadmin/Publica/2018/2018_Michels_Simulation%20of%20Plenoptic%20Cameras.pdf)
 
 <center><img src="/images/preview.jpeg" alt="Rendering example for a plenoptic camera 2.0 setup" width="500" height="500"></center>
 

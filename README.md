@@ -8,9 +8,9 @@ Supplemental material to
 
 The .blend file contains a model for plenoptic cameras described in the paper and the example scene above consisting of the [Stanford bunny](http://graphics.stanford.edu/data/3Dscanrep/#bunny), a plane viewing some text and the Blender monkey. This simulation allows the rendering of plenoptic image data exhibiting the same effects as images from real Raytrix or Lytro cameras. Some rendering results and further explanations are given in this repository's [wiki](https://github.com/Arne-Petersen/Plenoptic-Simulation/wiki).
 
-**Important:** Blender version 2.79 is needed in order to get correct results. For unknown reasons, the results of v2.76 show incorrect distortions.
-
 **UPDATE:** We included another MLA and used frames in the material nodes to clarify their functionality. Check out the corresponding [wiki page](https://github.com/Arne-Petersen/Plenoptic-Simulation/wiki/HowTo:-Different-MLAs)!
+
+**Important:** Blender version 2.79 is needed in order to get correct results. For unknown reasons, the results of v2.76 show incorrect distortions.
 
 A further, general note on the usage: Loading the .blend file should open a second Blender window. This is intended to function as a preview when modifying parameters. In order to get a good impression of the expected results without rendering the whole image you can simply change this views display/shading method to "Rendered" as shown in the image below.
 

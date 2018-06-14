@@ -11,6 +11,7 @@ The .blend file contains a model for plenoptic cameras described in the paper an
 **Important:** Blender version 2.79 is needed in order to get correct results. For unknown reasons, the results of v2.76 show incorrect distortions. A further, general note on the usage: Loading the .blend file should open a second Blender window. This is intended to function as a preview when modifying parameters. In order to get a good impression of the expected results without rendering the whole image you can simply change this views display/shading method to "Rendered" as shown in the image below.
 
 <center><img src="/images/HowTo/howto_general.png" alt="Rendering Preview" width="500"></center>
+<center><img src="/images/HowTo/howto_general2.png" alt="Rendering Preview" width="500"></center>
 
 
 For further information contact <tmi@informatik.uni-kiel.de> or <arne.petersen@informatik.uni-kiel.de>.

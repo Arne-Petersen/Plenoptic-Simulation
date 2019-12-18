@@ -1,22 +1,22 @@
-## Camera Generator Plugin for Blender 2.8
+## Camera Generator Add-On for Blender 2.8
 
-This plugin enables the user to simply generate conventional or plenoptic camera models which can be used to simulate real cameras more accurately.
-The plugin is an extension of the supplemental material to
+This add-on enables the user to simply generate conventional or plenoptic camera models which can be used to simulate real cameras more accurately.
+The add-on is an extension of the supplemental material to
 
 **[Tim Michels](https://www.mip.informatik.uni-kiel.de/en/team/tim-michels-m-sc), [Arne Petersen](https://www.mip.informatik.uni-kiel.de/en/team/dr-ing-arne-petersen), [Luca Palmieri](https://www.mip.informatik.uni-kiel.de/en/team/luca-palmieri-m-sc), [Reinhard Koch](https://www.mip.informatik.uni-kiel.de/en/team/prof.-dr.-ing.-reinhard-koch) - "Simulation of Plenoptic Cameras"** *, 3DTV Conference, 2018. DOI: 10.1109/3DTV.2018.8478432* [Preprint](http://data.mip.informatik.uni-kiel.de:555/wwwadmin/Publica/2018/2018_Michels_Simulation%20of%20Plenoptic%20Cameras.pdf)
 
-which you can find in this repository's history. The plugin can also be found on gitlab [here](https://gitlab.com/ungetym/blender-camgen).
+which you can find in this repository's history. The add-on can also be found on gitlab [here](https://gitlab.com/ungetym/blender-camgen).
 
 ![Preview](https://raw.githubusercontent.com/Arne-Petersen/Plenoptic-Simulation/master/images/preview.jpeg "Preview")
 
 ### Requirements and installation
 
-Install Blender 2.80 (newer versions have not been tested) and copy the *Blender_CamGen* folder into Blender's addon directory, usually located at .config/blender/2.80/scripts/addons under linux.
+Install Blender 2.80 (newer versions have not been tested) and copy the *Blender_CamGen* folder into Blender's add-on directory, usually located at .config/blender/2.80/scripts/addons under linux. Open Blender and navigate to Edit>Preferences>Add-ons. Search for Camera and activate the Camera_Generator add-on.
 
 ### Usage
 
 ![Initial screen](https://raw.githubusercontent.com/Arne-Petersen/Plenoptic-Simulation/master/images/0.jpg "Initial screen")
-1. After installing the plugin, the camera generator gui should appear as a submenu in the scene context as shown in green. 
+1. After installing the add-on, the camera generator gui should appear as a submenu in the scene context as shown in green. 
 For a quick preview of the camera output we recommend opening a second 3D view and switching to the camera's perspective by pressing 0 on the numpad (the preview tab is marked in blue).
 
 ![Camera created](https://raw.githubusercontent.com/Arne-Petersen/Plenoptic-Simulation/master/images/1.jpg "Camera created")

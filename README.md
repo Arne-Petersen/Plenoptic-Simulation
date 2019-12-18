@@ -5,7 +5,7 @@ The add-on is an extension of the supplemental material to
 
 **[Tim Michels](https://www.mip.informatik.uni-kiel.de/en/team/tim-michels-m-sc), [Arne Petersen](https://www.mip.informatik.uni-kiel.de/en/team/dr-ing-arne-petersen), [Luca Palmieri](https://www.mip.informatik.uni-kiel.de/en/team/luca-palmieri-m-sc), [Reinhard Koch](https://www.mip.informatik.uni-kiel.de/en/team/prof.-dr.-ing.-reinhard-koch) - "Simulation of Plenoptic Cameras"** *, 3DTV Conference, 2018. DOI: 10.1109/3DTV.2018.8478432* [Preprint](http://data.mip.informatik.uni-kiel.de:555/wwwadmin/Publica/2018/2018_Michels_Simulation%20of%20Plenoptic%20Cameras.pdf)
 
-which you can find in this repository's history. The add-on can also be found on gitlab [here](https://gitlab.com/ungetym/blender-camgen).
+which you can find in this repository's history. The add-on can also be found on gitlab [here](https://gitlab.com/ungetym/blender-camgen). Furthermore we have another repository dealing with the processing of images from plenoptic cameras [here](https://github.com/Arne-Petersen/PlenopticImageProcessing).
 
 ![Preview](https://raw.githubusercontent.com/Arne-Petersen/Plenoptic-Simulation/master/images/preview.jpeg "Preview")
 

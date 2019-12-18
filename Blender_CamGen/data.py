@@ -1,3 +1,4 @@
+import bpy
 import csv
 import math
 
@@ -14,12 +15,15 @@ def init():
     objective_list = ()
     global objective_list_created
     objective_list_created = False
-
-    #read lens material data from files
+    
+    # get add-on folder path
+    directory = bpy.utils.user_resource('SCRIPTS', "addons")+'/Blender_CamGen/'
+    # read lens material data from files
+    
     # Sellmeier type data:
     global sellmeier_data
     sellmeier_data = {}
-    with open('./sellmeier_materials.csv', newline='') as csvfile:
+    with open(directory+'sellmeier_materials.csv', newline='') as csvfile:
         reader = csv.reader(csvfile, delimiter=',', quotechar='&')
         for row in reader:
             #"Glass Type": (B1, B2, B3, C1, C2, C3, IOR)
@@ -28,7 +32,7 @@ def init():
     # Cauchy type data:  "Glass Type": (C1, C2, C3, C4, C5, C6, IOR)
     global cauchy_data
     cauchy_data = {}
-    with open('./cauchy_materials.csv', newline='') as csvfile:
+    with open(directory+'cauchy_materials.csv', newline='') as csvfile:
         reader = csv.reader(csvfile, delimiter=',', quotechar='&')
         for row in reader:
             #"Glass Type": (C1, C2, C3, C4, C5, C6, IOR)

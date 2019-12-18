@@ -15,10 +15,12 @@ from . import create
 
 # scans the lens folder for csv files containing lens data. The files are then listed in the objective list selector.
 def find_items(self, context):
-    #check if list was already created
+    # get add-on folder path
+    addon_directory = bpy.utils.user_resource('SCRIPTS', "addons")+'/Blender_CamGen/'  
+    # check if list was already created
     if (not data.objective_list_created):
-        #get all files in the lenses dir
-        lensfiles = [f for f in listdir("./Lenses") if isfile(join("./Lenses", f))]
+        # get all files in the lenses dir
+        lensfiles = [f for f in listdir(addon_directory+"Lenses") if isfile(join(addon_directory+"Lenses", f))]
         lensfiles.sort()
         result = ()
         counter = 0
@@ -26,9 +28,9 @@ def find_items(self, context):
             #check if file end with .csv
             file_ending = lensfile[-3:]
             if file_ending == "csv":
-                #find "_" which separates lens name and author/company name
+                # find "_" which separates lens name and author/company name
                 separator = lensfile.find("_")
-                #add objective entry to list
+                # add objective entry to list
                 result = result + (('OBJECTIVE_'+str(counter),lensfile[:separator],lensfile),)
                 counter = counter + 1
         data.objective_list_created = True
@@ -44,13 +46,13 @@ def objective_scale(self, context):
 
 def sensor(self, context):
     cg = bpy.data.scenes[0].camera_generator
-    #rescale diffusor plane
+    # rescale diffusor plane
     bpy.data.objects['Diffusor Plane'].scale[1] = cg.prop_sensor_width / 1000.0
     bpy.data.objects['Diffusor Plane'].scale[2] = cg.prop_sensor_height / 1000.0
-    #adjust render resolution assuming square pixels
+    # adjust render resolution assuming square pixels
     bpy.data.scenes[0].render.resolution_y = bpy.data.scenes[0].render.resolution_x / bpy.data.objects['Diffusor Plane'].scale[1] * bpy.data.objects['Diffusor Plane'].scale[2]
     
-    #rescale orthographic camera
+    # rescale orthographic camera
     bpy.data.cameras['Orthographic Camera'].ortho_scale = max(cg.prop_sensor_width, cg.prop_sensor_height) / 1000.0
     
     # rescale MLA to sensor size

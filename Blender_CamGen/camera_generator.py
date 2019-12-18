@@ -23,8 +23,10 @@ def str_to_float(s):
 
 # parse a csv lens data file and return the objective data
 def parse_lensfile(lensfile):
-    objective = []  
-    reader = csv.reader(open("./Lenses/"+lensfile, 'r'), delimiter=';')
+    objective = []
+    # get add-on folder path
+    addon_directory = bpy.utils.user_resource('SCRIPTS', "addons")+'/Blender_CamGen/'  
+    reader = csv.reader(open(addon_directory+'Lenses/'+lensfile, 'r'), delimiter=';')
     data.glass_data_known = True
     for row_i, row in enumerate(reader):
         if row_i < 1:
@@ -91,9 +93,11 @@ class CAMGEN_OT_CreateCam(bpy.types.Operator):
 
         ####################    Find lens file    ####################
 
+        # get add-on folder path
+        addon_directory = bpy.utils.user_resource('SCRIPTS', "addons")+'/Blender_CamGen/'
         # get selected objective id 
         objective_id = int(bpy.data.scenes[0].camera_generator.prop_objective_list[10:])
-        lensfiles = [f for f in listdir("./Lenses") if isfile(join("./Lenses", f))]
+        lensfiles = [f for f in listdir(addon_directory+'Lenses') if isfile(join(addon_directory+'Lenses', f))]
         lensfiles.sort()
         counter = 0
         file = ""
@@ -144,9 +148,9 @@ class CAMGEN_OT_CreateCam(bpy.types.Operator):
         ####################    Import basic camera structure and materials    ####################
 
         bpy.context.view_layer.active_layer_collection=bpy.context.view_layer.layer_collection
-        bpy.ops.wm.append(filename="Camera Collection", directory="./resources.blend/Collection")
-        bpy.ops.wm.append(filename="Glass Material", directory="./resources.blend/Material")
-        bpy.ops.wm.append(filename="MLA Hex Material", directory="./resources.blend/Material")
+        bpy.ops.wm.append(filename="Camera Collection", directory=addon_directory+"resources.blend/Collection")
+        bpy.ops.wm.append(filename="Glass Material", directory=addon_directory+"resources.blend/Material")
+        bpy.ops.wm.append(filename="MLA Hex Material", directory=addon_directory+"resources.blend/Material")
         # set fake users for relevant materials in order to keep these even if not in use
         bpy.data.materials['Glass Material'].use_fake_user = True
         bpy.data.materials['MLA Hex Material'].use_fake_user = True

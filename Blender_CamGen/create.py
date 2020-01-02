@@ -5,7 +5,7 @@ from . import data
 
 # create a flat lens surface
 def flat_surface(half_lens_height, ior, position, name):
-    bpy.ops.mesh.primitive_circle_add(vertices = 64, radius = half_lens_height, fill_type = 'TRIFAN', calc_uvs = False, rotation = (0, -3.1415926536/2.0, 0))
+    bpy.ops.mesh.primitive_circle_add(vertices = 64, radius = half_lens_height, fill_type = 'TRIFAN', calc_uvs = False, location=(0,0,0), rotation = (0, -3.1415926536/2.0, 0))
     bpy.ops.object.transform_apply()
     bpy.context.active_object.location[0] = position
     # rename object and move it to 'Objective' empty
@@ -44,7 +44,7 @@ def lens_surface(vertex_count_height, vertex_count_radial, surface_radius, half_
     num_vertices = 2 * int(vertex_count_height/ratio+0.5)
 
     # create circle
-    bpy.ops.mesh.primitive_circle_add(vertices = num_vertices, radius = surface_radius)
+    bpy.ops.mesh.primitive_circle_add(vertices = num_vertices, radius = surface_radius, location = (0,0,0))
     bpy.ops.object.transform_apply()
     bpy.ops.object.mode_set(mode="EDIT")
     bpy.ops.mesh.select_all(action='DESELECT')
@@ -133,7 +133,7 @@ def housing(outer_vertices, outer_lens_index, vertex_count_radial):
     bpy.ops.mesh.select_all(action='DESELECT')
     bpy.ops.mesh.select_all(action='SELECT')
     # use the spin operator to create the rotational surface
-    bpy.ops.mesh.spin(steps = vertex_count_radial, angle = 2.0*3.1415926536, axis = (1,0,0))
+    bpy.ops.mesh.spin(steps = vertex_count_radial, angle = 2.0*3.1415926536, axis = (1,0,0), center = (0,0,0))
     # remove double vertices resulting from the spinning
     bpy.ops.mesh.select_all(action='SELECT')
     bpy.ops.mesh.remove_doubles(threshold=0.0, use_unselected=True)
@@ -154,7 +154,7 @@ def aperture():
 
     # create circle
     num_of_blades = bpy.data.scenes[0].camera_generator.prop_aperture_blades
-    bpy.ops.mesh.primitive_circle_add(vertices=num_of_blades,radius=0.5)
+    bpy.ops.mesh.primitive_circle_add(vertices=num_of_blades,radius=0.5, location=(0,0,0))
     # rename
     bpy.context.active_object.name="Opening"
     # rotate

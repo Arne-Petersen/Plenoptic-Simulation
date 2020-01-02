@@ -295,7 +295,7 @@ class CAMGEN_OT_CreateCheckerboard(bpy.types.Operator):
 
 
         # create new plane
-        bpy.ops.mesh.primitive_plane_add(size=1, rotation=(0,0.5*3.14159,0))
+        bpy.ops.mesh.primitive_plane_add(size=1, rotation=(0,0.5*3.14159,0), location=(0,0,0))
         bpy.ops.object.transform_apply()
         checkerboard = bpy.context.active_object
         checkerboard.name = 'Checkerboard'

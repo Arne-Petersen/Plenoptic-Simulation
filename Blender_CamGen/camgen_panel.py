@@ -23,7 +23,7 @@ class CAMGEN_Properties(PropertyGroup):
         description = "Scaling of the objective - press 'Create Camera Model' after adjusting the scale in order to generate a new model.",
         default = 1.0,
         min = 0.001,
-        max = 10.0,
+        max = 1000.0,
         update = update.objective_scale
         )
 

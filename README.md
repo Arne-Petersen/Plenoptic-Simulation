@@ -13,6 +13,7 @@ which you can find in this repository's history. The add-on can also be found on
 
 + Blender 2.80 or higher
 + Linux and Windows 10 have been tested
++ Render engine must be set to Cycles
 
 ### Installation
 

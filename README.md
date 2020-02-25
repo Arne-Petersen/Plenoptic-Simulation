@@ -9,9 +9,17 @@ which you can find in this repository's history. The add-on can also be found on
 
 ![Preview](https://raw.githubusercontent.com/Arne-Petersen/Plenoptic-Simulation/master/images/preview.jpeg "Preview")
 
-### Requirements and installation
+### Requirements
 
-Install Blender 2.80 (newer versions have not been tested) and copy the *Blender_CamGen* folder into Blender's add-on directory, usually located at .config/blender/2.80/scripts/addons under linux. Open Blender and navigate to Edit>Preferences>Add-ons. Search for Camera and activate the Camera_Generator add-on.
++ Blender 2.80 or higher
++ Linux and Windows 10 have been tested
++ Render engine must be set to Cycles
+
+### Installation
+
+  1. Copy the `Blender_CamGen` folder into the Blender [add-on folder](https://docs.blender.org/manual/en/latest/advanced/blender_directory_layout.html#macos) that is right for your operating system.
+  2. Open Blender and navigate to `Edit > Preferences > Add-ons`
+  3. Find and activate `Generic: Camera_Generator` the list of available Add-ons. **You will need to press *refresh* in the Add-ons panel if you do not see the Camera_Generator option.**
 
 ### Usage
 

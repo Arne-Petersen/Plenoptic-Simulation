@@ -25,7 +25,7 @@ def find_items(self, context):
         result = ()
         counter = 0
         for lensfile in lensfiles:
-            #check if file end with .csv
+            # check if file ends with .csv
             file_ending = lensfile[-3:]
             if file_ending == "csv":
                 # find "_" which separates lens name and author/company name
@@ -134,6 +134,40 @@ def wavelength(self,context):
                 for object in bpy.data.objects:
                     if object.name == lens['name']:
                         bpy.data.materials[object.material_slots[0].name].node_tree.nodes['IOR'].outputs[0].default_value = lens['ior_ratio']
+
+def fresnel_reflection_enabled(self,context):
+    # check whether objective is available
+    if (len(data.objective) == 0) or (not self.prop_fresnel_transmission_enabled):
+        return
+    else:
+        for lens in data.objective:
+                for object in bpy.data.objects:
+                    if object.name == lens['name']:
+                        material = bpy.data.materials[object.material_slots[0].name]
+                        if self.prop_fresnel_reflection_enabled:
+                            material.node_tree.nodes['Reflection BSDF'].inputs['Color'].default_value[0]=1
+                            material.node_tree.nodes['Reflection BSDF'].inputs['Color'].default_value[1]=1
+                            material.node_tree.nodes['Reflection BSDF'].inputs['Color'].default_value[2]=1
+                        else:
+                            material.node_tree.nodes['Reflection BSDF'].inputs['Color'].default_value[0]=0
+                            material.node_tree.nodes['Reflection BSDF'].inputs['Color'].default_value[1]=0
+                            material.node_tree.nodes['Reflection BSDF'].inputs['Color'].default_value[2]=0
+
+def fresnel_transmission_enabled(self,context):
+    # check whether objective is available
+    if len(data.objective) == 0:
+        return
+    else:
+        for lens in data.objective:
+                for object in bpy.data.objects:
+                    if object.name == lens['name']:
+                        material = bpy.data.materials[object.material_slots[0].name]
+                        if self.prop_fresnel_transmission_enabled:
+                            material.node_tree.links.new(material.node_tree.nodes['Mix Shader'].outputs[0],material.node_tree.nodes['Material Output'].inputs[0])
+                        else:
+                            material.node_tree.links.new(material.node_tree.nodes['Refraction BSDF'].outputs[0],material.node_tree.nodes['Material Output'].inputs[0])
+
+    fresnel_reflection_enabled(self,context)
 
 def mla_enabled(self, context):
     hide = not bpy.data.scenes[0].camera_generator.prop_mla_enabled

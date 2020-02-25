@@ -106,6 +106,20 @@ class CAMGEN_Properties(PropertyGroup):
         update = update.wavelength
         )
 
+    prop_fresnel_transmission_enabled: BoolProperty(
+        name="",
+        description="Activate reduced light transmission according to Fresnel equations.",
+        default = False,
+        update = update.fresnel_transmission_enabled
+        )
+
+    prop_fresnel_reflection_enabled: BoolProperty(
+        name="",
+        description="Activate reflections within the objective.",
+        default = False,
+        update = update.fresnel_reflection_enabled
+        )
+
     prop_mla_enabled: BoolProperty(
         name="",
         description="Activate if microlens array should be used.",
@@ -237,6 +251,12 @@ class CAMGEN_PT_Main(bpy.types.Panel):
         row.label(text="Wavelength in nm")
         row.prop(context.scene.camera_generator, "prop_wavelength")
         row = layout.row()
+        row.label(text="Use Fresnel Transmission")
+        row.prop(context.scene.camera_generator, "prop_fresnel_transmission_enabled")
+        row = layout.row()
+        row.label(text="Use Fresnel Reflections")
+        row.prop(context.scene.camera_generator, "prop_fresnel_reflection_enabled")
+        row = layout.row()
         row.label(text="Sensor-Objective Distance in mm")
         row.prop(context.scene.camera_generator, "prop_sensor_mainlens_distance")
         row = layout.row()
@@ -244,7 +264,7 @@ class CAMGEN_PT_Main(bpy.types.Panel):
         row.prop(context.scene.camera_generator, "prop_focal_distance")
         row = layout.row()
         row.label(text="")
-        row.operator('camgen.createcheckerboard', text="Create Checkerboard")
+        row.operator('camgen.createcalibrationpattern', text="Create Calibration Pattern")
 
 
 # ------------------------------------------------------------------------

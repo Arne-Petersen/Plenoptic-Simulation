@@ -284,3 +284,16 @@ class CAMGEN_PT_MLAConfig(bpy.types.Panel):
         row = layout.row()
         row.label(text="Focal length ML type 3")
         row.prop(context.scene.camera_generator, "prop_ml_type_3_f")
+
+class CAMGEN_PT_Tests(bpy.types.Panel):
+    bl_idname = "CAMGEN_PT_Tests"
+    bl_label = "Tests"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_parent_id = "CAMGEN_PT_Main"
+    
+    def draw(self, context):
+        layout = self.layout
+        row = layout.row()
+        row.label(text="")
+        row.operator('camgen.runtests', text="Run Tests")

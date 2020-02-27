@@ -15,7 +15,7 @@ from bpy.utils import ( register_class, unregister_class )
 from bpy.props import PointerProperty
 
 from . camera_generator import CAMGEN_OT_CreateCam
-from . camera_generator import CAMGEN_OT_CreateCheckerboard
+from . camera_generator import CAMGEN_OT_CreateCalibrationPattern
 from . camera_generator import CAMGEN_OT_RunTests
 from . camera_generator import CAMGEN_OT_LoadConfig
 from . camera_generator import CAMGEN_OT_SaveConfig
@@ -28,7 +28,7 @@ from . import settings
 
 from . import test_camera_generator
 
-classes = (CAMGEN_OT_CreateCam, CAMGEN_OT_CreateCheckerboard, CAMGEN_OT_LoadConfig, CAMGEN_OT_SaveConfig, CAMGEN_Properties, CAMGEN_PT_Main, CAMGEN_PT_MLAConfig, CAMGEN_PT_Tests, CAMGEN_OT_RunTests)
+classes = (CAMGEN_OT_CreateCam, CAMGEN_OT_CreateCalibrationPattern, CAMGEN_OT_LoadConfig, CAMGEN_OT_SaveConfig, CAMGEN_Properties, CAMGEN_PT_Main, CAMGEN_PT_MLAConfig, CAMGEN_PT_Tests, CAMGEN_OT_RunTests)
 
 def register():
     # init data

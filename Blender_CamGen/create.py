@@ -46,12 +46,11 @@ def flat_surface(half_lens_height, ior, position, name) -> [float]:
     glass_material = bpy.data.materials['Glass Material'].copy()
     glass_material.name = f'Glass Material {name}'
     glass_material.node_tree.nodes['IOR'].outputs['Value'].default_value = ior
-
     # delete normal recalculation for flat surface
-    glass_material.node_tree.links.remove(
-        glass_material.node_tree.nodes['Vector Transform.002'].outputs[0].links[0])
-    circle.data.materials.append(glass_material)
-
+    glass_material.node_tree.links.remove(glass_material.node_tree.nodes['Vector Transform.002'].outputs[0].links[0]) # Fresnel link
+    glass_material.node_tree.links.remove(glass_material.node_tree.nodes['Vector Transform.002'].outputs[0].links[0]) # refraction link
+    glass_material.node_tree.links.remove(glass_material.node_tree.nodes['Vector Transform.002'].outputs[0].links[0]) # reflection link
+    bpy.context.active_object.data.materials.append(glass_material)
     # get outer vertex for housing creation
     bpy.ops.object.mode_set(mode="OBJECT")
     outer_vertex = circle.data.vertices[0]

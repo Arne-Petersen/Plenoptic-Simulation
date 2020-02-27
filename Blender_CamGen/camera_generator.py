@@ -97,8 +97,7 @@ def delete_old_camera():
     # delete the camera collection
     for collection in bpy.data.collections:
         if collection.name == 'Camera Collection':
-            bpy.data.collections.remove(
-                bpy.data.collections['Camera Collection'])
+            bpy.data.collections.remove(bpy.data.collections['Camera Collection'])
             break
     # delete orphan meshes
     for mesh in bpy.data.meshes:
@@ -256,11 +255,11 @@ def import_camera(path: str):
     '''Imports stuff from resources.blend'''
     bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection
 
-    for filename in ['Camera Collection', 'Glass Material', 'MLA Hex Material']:
+    for filename in ['Camera Collection', 'Glass Material', 'MLA Hex Material', 'Calibration Pattern Material']:
         bpy.ops.wm.append(
             filename=filename, directory=f'{path}resources.blend/{filename.split()[-1]}')
 
-    for materials in ['Glass Material', 'MLA Hex Material', 'MLA Rect Material']:
+    for materials in ['Glass Material', 'MLA Hex Material', 'MLA Rect Material', 'Calibration Pattern Material']:
         bpy.data.materials[materials].use_fake_user = True
 
     bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection.children[
@@ -298,57 +297,36 @@ class CAMGEN_OT_CreateCam(bpy.types.Operator):
 
 
 # ------------------------------------------------------------------------
-#    Checkerboard creation operator
+#    Calibration pattern creation operator
 # ------------------------------------------------------------------------
 
-class CAMGEN_OT_CreateCheckerboard(bpy.types.Operator):
-    bl_idname = "camgen.createcheckerboard"
-    bl_label = "Generate Checkerboard"
-    bl_description = "Generate a checkerboard approximately located at the focus plane."
+class CAMGEN_OT_CreateCalibrationPattern(bpy.types.Operator):
+    bl_idname = "camgen.createcalibrationpattern"
+    bl_label = "Generate Calibration Pattern"
+    bl_description = "Generate a calibration pattern approximately located at the focus plane."
 
     def execute(self, context):
 
-        # delete old checkerboard
+        # delete old calibration pattern
         for object in bpy.data.objects:
-            if object.name == 'Checkerboard':
+            if object.name == 'Calibration Pattern':
                 delete_recursive(object)
                 break
         # delete orphan meshes
         for mesh in bpy.data.meshes:
             if mesh.users == 0:
                 bpy.data.meshes.remove(mesh)
-        # delete orphan materials
-        for material in bpy.data.materials:
-            if material.name == 'Checkerboard Material':
-                bpy.data.materials.remove(material)
 
         # create new plane
         bpy.ops.mesh.primitive_plane_add(
             size=1, rotation=(0, 0.5*3.14159, 0), location=(0, 0, 0))
         bpy.ops.object.transform_apply()
-        checkerboard = bpy.context.active_object
-        checkerboard.name = 'Checkerboard'
-        # create material
-        material = bpy.data.materials.new(name='Checkerboard Material')
-        material.use_nodes = True
-        material.node_tree.nodes.remove(
-            material.node_tree.nodes['Principled BSDF'])
-        node_uv = material.node_tree.nodes.new('ShaderNodeUVMap')
-        node_tex = material.node_tree.nodes.new('ShaderNodeTexChecker')
-        node_tex.inputs['Color1'].default_value = [1, 1, 1, 1]  # white
-        node_tex.inputs['Color2'].default_value = [0, 0, 0, 1]  # black
-        node_tex.inputs['Scale'].default_value = 30.0
-        node_emit = material.node_tree.nodes.new('ShaderNodeEmission')
-        material.node_tree.links.new(
-            node_uv.outputs['UV'], node_tex.inputs['Vector'])
-        material.node_tree.links.new(
-            node_tex.outputs['Color'], node_emit.inputs['Color'])
-        material.node_tree.links.new(
-            node_emit.outputs['Emission'], material.node_tree.nodes['Material Output'].inputs['Surface'])
+        calibration_pattern = bpy.context.active_object
+        calibration_pattern.name = 'Calibration Pattern'
+        # set material
 
-        checkerboard.data.materials.append(material)
-        checkerboard.location[0] = - \
-            bpy.data.scenes[0].camera_generator.prop_focal_distance / 100.0
+        calibration_pattern.data.materials.append(bpy.data.materials['Calibration Pattern Material'])
+        calibration_pattern.location[0] = - bpy.data.scenes[0].camera_generator.prop_focal_distance / 100.0
 
         return {'FINISHED'}
 

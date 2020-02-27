@@ -1,5 +1,3 @@
-
-Plenoptic_Simulation\.blend1
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -131,5 +129,5 @@ dmypy.json
 .pyre/
 
 # Custom
-Plenoptic_Simulation\.blend1
-#src
+Plenoptic_Simulation/.blend1
+Blender_CamGen/.blend1

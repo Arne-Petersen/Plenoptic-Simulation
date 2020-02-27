@@ -17,7 +17,7 @@ which you can find in this repository's history. The add-on can also be found on
 
 ### Installation
 
-  1. Copy the `Blender_CamGen` folder into the Blender [add-on folder](https://docs.blender.org/manual/en/latest/advanced/blender_directory_layout.html#macos) that is right for your operating system.
+  1. Copy the `Blender_CamGen` folder into the Blender [add-on folder](https://docs.blender.org/manual/en/latest/advanced/blender_directory_layout.html#platform-dependent-paths) that is right for your operating system, e.g. for Blender 2.82 under Linux ~/.config/blender/2.82/scripts/addons/
   2. Open Blender and navigate to `Edit > Preferences > Add-ons`
   3. Find and activate `Generic: Camera_Generator` the list of available Add-ons. **You will need to press *refresh* in the Add-ons panel if you do not see the Camera_Generator option.**
 

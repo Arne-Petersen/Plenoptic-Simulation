@@ -6,11 +6,12 @@ from . import data
 
 from typing import Any, List, Dict, Tuple
 
-# Helper classes
+# ------------------------------------------------------------------------
+#    Helper functions
+# ------------------------------------------------------------------------
 
-
+# creates a circle mesh
 def add_circle(config: Dict[str, Any]) -> bpy.types.Object:
-    '''Adds a circle'''
     bpy.ops.mesh.primitive_circle_add(**config['defaults'])
     circle: bpy.types.Object = bpy.context.active_object
     for setting, value in config.items():
@@ -19,44 +20,32 @@ def add_circle(config: Dict[str, Any]) -> bpy.types.Object:
         setattr(circle, setting, value)
     return circle
 
-
-def calculate_sagitta(half_lens_height: float, surface_radius: float) -> float:
-    '''Calculates sagitta'''
-    if half_lens_height > surface_radius:
-        return surface_radius
-    return surface_radius - math.sqrt(surface_radius * surface_radius - half_lens_height * half_lens_height)
-
-
-def calculate_number_of_vertices(half_lens_height: float, surface_radius: float, vertex_count_height: int) -> int:
-    '''Calculates the number of vertices'''
-    return int(vertex_count_height / (math.asin(half_lens_height / surface_radius) / math.pi) + 0.5) * 2
-
-
+# creates refraction material for glasses
 def create_glass_material(name: str, ior: float, remove_transform: bool) -> bpy.types.Material:
-    '''Creates a glass material'''
-    glass_material: bpy.types.Material = bpy.data.materials['Glass Material'].copy(
-    )
+    glass_material: bpy.types.Material = bpy.data.materials['Glass Material'].copy()
     glass_material.name = f'Glass Material {name}'
     glass_material.node_tree.nodes['IOR'].outputs['Value'].default_value = ior
 
+    # TODO: Check why the link to the refraction shader is removed!
     if remove_transform:
         glass_material.node_tree.links.remove(
             glass_material.node_tree.nodes['Vector Transform.002'].outputs[0].links[0])
 
     return glass_material
 
-
-def calculate_outer_vertex(vertices: bpy.types.MeshVertices) -> bpy.types.MeshVertex:
-    '''Calculates the outer vertex'''
+# finds the outer vertex, i.e. the vertex with the largest z value
+def find_outer_vertex(vertices: bpy.types.MeshVertices) -> bpy.types.MeshVertex:
     outer_vertex = vertices[0]
     for vertex in vertices:
         if vertex.co.z > outer_vertex.co.z:
             outer_vertex = vertex
     return outer_vertex
 
-# Main
+# ------------------------------------------------------------------------
+#    Single camera component creation
+# ------------------------------------------------------------------------
 
-
+# creates a flat surface for lenses without curvature
 def flat_surface(half_lens_height: float, ior: float, position: float, name: str) -> List[float]:
     '''Creates a flat surface as part of the lens stack'''
     circle: bpy.types.Object = add_circle({
@@ -76,12 +65,11 @@ def flat_surface(half_lens_height: float, ior: float, position: float, name: str
 
     bpy.ops.object.mode_set(mode="OBJECT")
 
-    outer_vertex: bpy.types.MeshVertex = calculate_outer_vertex(
-        circle.data.vertices)
+    outer_vertex: bpy.types.MeshVertex = find_outer_vertex(circle.data.vertices)
 
     return [outer_vertex.co.x, outer_vertex.co.y, outer_vertex.co.z]
 
-
+# creates a spherical lens surface
 def lens_surface(vertex_count_height: int, vertex_count_radial: int, surface_radius: float, half_lens_height: float, ior: float, position: float, name: str) -> List[float]:
     '''Creates a lens surface as part of the lens stack'''
     flip = False
@@ -91,7 +79,7 @@ def lens_surface(vertex_count_height: int, vertex_count_radial: int, surface_rad
 
     circle: bpy.types.Object = add_circle({
         'defaults': {
-            'vertices': calculate_number_of_vertices(half_lens_height, surface_radius, vertex_count_height),
+            'vertices': data.calculate_number_of_vertices(half_lens_height, surface_radius, vertex_count_height),
             'radius': surface_radius,
             'location': (0, 0, 0)
         }
@@ -105,7 +93,7 @@ def lens_surface(vertex_count_height: int, vertex_count_radial: int, surface_rad
     circle.data.vertices[0].co.x = 0.0
     # select all vertices that should be deleted
     for vertex in circle.data.vertices:
-        if (vertex.co.y < surface_radius - calculate_sagitta(half_lens_height, surface_radius)) or (vertex.co.x > 0.0):
+        if (vertex.co.y < surface_radius - data.calculate_sagitta(half_lens_height, surface_radius)) or (vertex.co.x > 0.0):
             vertex.select = True
     bpy.ops.object.mode_set(mode="EDIT")
     bpy.ops.mesh.delete(type='VERT')
@@ -137,12 +125,11 @@ def lens_surface(vertex_count_height: int, vertex_count_radial: int, surface_rad
     circle.data.materials.append(create_glass_material(name, ior, False))
     # return the outer vertex for housing creation
     bpy.ops.object.mode_set(mode="OBJECT")
-    outer_vertex: bpy.types.MeshVertex = calculate_outer_vertex(
-        circle.data.vertices)
+    outer_vertex: bpy.types.MeshVertex = find_outer_vertex(circle.data.vertices)
 
     return [outer_vertex.co.x, outer_vertex.co.y, outer_vertex.co.z]
 
-
+# creates the objective and camera housing
 def housing(outer_vertices, outer_lens_index, vertex_count_radial):
     bpy.data.meshes['Housing Mesh'].vertices.add(len(outer_vertices)+3)
     # add outer lens vertices to mesh
@@ -199,7 +186,7 @@ def housing(outer_vertices, outer_lens_index, vertex_count_radial):
     bpy.ops.object.mode_set(mode="OBJECT")
     bpy.data.objects['Objective Housing'].display_type = 'WIRE'
 
-
+# creates the aperture via difference modifier
 def aperture():
     # check if old opening exists and delete it
     for current_object in bpy.data.objects:
@@ -244,3 +231,24 @@ def aperture():
     bpy.data.objects['Opening'].scale[2] = bpy.data.scenes[0].camera_generator.prop_aperture_size/1000.0
     # rotate opening according to currently set angle
     bpy.data.objects['Opening'].rotation_euler[0] = bpy.data.scenes[0].camera_generator.prop_aperture_angle/180.0*math.pi
+
+
+# ------------------------------------------------------------------------
+#    Meta: Multiple component creation
+# ------------------------------------------------------------------------
+
+# creates multiple lenses from list and return a list of outer vertices for housing creation
+def lenses(vertex_count_height: int, vertex_count_radial: int, lenses: List[Dict[str, Any]]) -> Tuple[List[List[float]], List[int]]:
+    outer_vertices, outer_lens_index = [], list(range(len(lenses)))
+
+    for index, lens in enumerate(lenses):
+        if lens['material'] == "air" and lenses[index - 1]['material'] == "air":
+            outer_lens_index.remove(index)
+            continue
+        if lens['radius'] == 0.0:
+            outer_vertices.append(flat_surface(
+                lens['semi_aperture'], lens['ior_ratio'], lens['position'], lens['name']))
+            continue
+        outer_vertices.append(lens_surface(vertex_count_height, vertex_count_radial,
+                                                  lens['radius'], lens['semi_aperture'], lens['ior_ratio'], lens['position'], lens['name']))
+    return outer_vertices, outer_lens_index

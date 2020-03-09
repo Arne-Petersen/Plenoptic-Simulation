@@ -4,8 +4,6 @@ import bpy
 
 from . import camera_generator
 from . import data
-from . settings import cycles_settings as settings
-
 
 class TestCameraGenerator(unittest.TestCase):
     def test_str_to_float(self):
@@ -17,9 +15,9 @@ class TestCameraGenerator(unittest.TestCase):
 
     def test_initialise_cycles(self):
         scene = bpy.data.scenes[0]
-        camera_generator.initialise_cycles(scene, settings)
-        for setting in settings:
-            self.assertEquals(scene.cycles[setting], settings[setting])
+        camera_generator.initialise_cycles(scene, data.cycles_settings)
+        for setting in data.cycles_settings:
+            self.assertEquals(scene.cycles[setting], data.cycles_settings[setting])
 
     def test_parse_lensfile(self):
         lensfile = 'D-Gauss F1.4 45deg_Mandler USP2975673 p351.csv'

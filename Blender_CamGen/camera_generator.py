@@ -6,11 +6,9 @@ from bpy_extras.io_utils import ExportHelper, ImportHelper
 import csv
 import math
 
-
 from . import data
 from . import create
 from . import update
-from . settings import cycles_settings as settings
 from . test_camera_generator import test_main
 
 from typing import Any, List, Dict, Tuple
@@ -19,9 +17,22 @@ from typing import Any, List, Dict, Tuple
 #    Helper functions
 # ------------------------------------------------------------------------
 
+# turns a number string into a float
+def str_to_float(string: str) -> float:
+    string = string.strip()
+    if not len(string):
+        return 0.0
+    return float(string)
 
+# deletes an object and all children
+def delete_recursive(parent_object):
+    children = parent_object.children
+    for child in children:
+        delete_recursive(child)
+    bpy.data.objects.remove(parent_object)
+
+# reads lens parameters from csv file
 def parse_lensfile(lensfile):
-
     objective = []
     # get add-on folder path
     addon_directory = bpy.utils.user_resource(
@@ -61,13 +72,6 @@ def parse_lensfile(lensfile):
                 data.glass_data_known = False
 
     return objective
-
-
-def delete_recursive(parent_object):
-    children = parent_object.children
-    for child in children:
-        delete_recursive(child)
-    bpy.data.objects.remove(parent_object)
 
 
 def get_lens_file(addon_directory):
@@ -121,46 +125,8 @@ def delete_old_camera():
             bpy.data.node_groups.remove(group)
 
 
-def calculate_iors(objective):
-    for i in range(len(objective)-1, 0, -1):
-        objective[i]['ior_ratio'] = objective[i -
-                                              1]['ior_wavelength']/objective[i]['ior_wavelength']
-    objective[0]['ior_ratio'] = 1.0/objective[0]['ior_wavelength']
-
-
-def calculate_aperture(data):
-    data.aperture_index = -1
-    for i in range(0, len(data.objective)-1):
-        if data.objective[i]['material'] == "air" and data.objective[i+1]['material'] == "air":
-            data.aperture_index = i+1
-            break
-    aperture_position = 0.0
-
-    if data.aperture_index != -1:
-        for i in range(0, data.aperture_index):
-            aperture_position = aperture_position + \
-                data.objective[i]['thickness']
-    else:
-        if data.objective[0]['radius'] > 0.0:
-            aperture_position = -0.01
-        else:
-            radius = data.objective[0]['radius']
-            height = data.objective[0]['semi_aperture']
-            aperture_position = min(-0.01, 1.1 * (radius +
-                                                  math.sqrt(radius*radius - height*height)))
-
-    for i in range(0, len(data.objective)):
-        data.objective[i]['position'] = data.objective[i]['radius'] - \
-            aperture_position
-        for j in range(0, i):
-            data.objective[i]['position'] = data.objective[i]['position'] + \
-                data.objective[j]['thickness']
-
-
-def create_camera(outer_vertices, outer_lens_index, vertex_count_radial, scene):
-    create.housing(outer_vertices, outer_lens_index, vertex_count_radial)
-    create.aperture()
-
+def set_aperture_parameters(scene):
+    # set opening rotation
     bpy.data.objects['Opening'].rotation_euler[0] = scene.camera_generator.prop_aperture_angle/180.0*math.pi
 
     if data.aperture_index != -1:
@@ -199,7 +165,7 @@ def create_camera(outer_vertices, outer_lens_index, vertex_count_radial, scene):
         bpy.data.objects['Aperture Plane'].scale[2] = size
 
 
-def set_MLA(data, scene, self, context):
+def set_MLA_parameters(data, scene, self, context):
     last_lens = data.objective[len(data.objective)-1]
     bpy.data.objects['Sensor'].location[0] = last_lens['position'] + \
         math.fabs(last_lens['radius'])+last_lens['thickness']
@@ -219,28 +185,8 @@ def set_MLA(data, scene, self, context):
     update.ml_type_2_f(self, context)
     update.ml_type_3_f(self, context)
 
-
-# ------------------------------------------------------------------------
-#    REFACTORED
-# ------------------------------------------------------------------------
-
-
-def str_to_float(string: str) -> float:
-    '''Turns a number string into a float'''
-    string = string.strip()
-    if not len(string):
-        return 0.0
-    return float(string)
-
-
-def initialise_cycles(scene: bpy.types.Scene, settings: bpy.types.PropertyGroup):
-    '''Applies Cycles settings'''
-    for setting in settings:
-        scene.cycles[setting] = settings[setting]
-
-
-def import_camera(path: str):
-    '''Imports stuff from resources.blend'''
+# imports raw camera model and materials from given resource file
+def import_basic_camera(path: str):
     bpy.context.view_layer.active_layer_collection = bpy.context.view_layer.layer_collection
 
     for filename in ['Camera Collection', 'Glass Material', 'MLA Hex Material', 'Calibration Pattern Material']:
@@ -254,26 +200,9 @@ def import_camera(path: str):
         'Camera Collection']
 
 
-def create_lenses(vertex_count_height: int, vertex_count_radial: int, lenses: List[Dict[str, Any]]) -> Tuple[List[List[float]], List[int]]:
-    '''Creates the lens stack'''
-    outer_vertices, outer_lens_index = [], list(range(len(lenses)))
-
-    for index, lens in enumerate(lenses):
-        if lens['material'] == "air" and lenses[index - 1]['material'] == "air":
-            outer_lens_index.remove(index)
-            continue
-        if lens['radius'] == 0.0:
-            outer_vertices.append(create.flat_surface(
-                lens['semi_aperture'], lens['ior_ratio'], lens['position'], lens['name']))
-            continue
-        outer_vertices.append(create.lens_surface(vertex_count_height, vertex_count_radial,
-                                                  lens['radius'], lens['semi_aperture'], lens['ior_ratio'], lens['position'], lens['name']))
-    return outer_vertices, outer_lens_index
-
 # ------------------------------------------------------------------------
-#    MAIN
+#    Camera creation operator
 # ------------------------------------------------------------------------
-
 
 class CAMGEN_OT_CreateCam(bpy.types.Operator):
     bl_idname = "camgen.createcam"
@@ -281,24 +210,48 @@ class CAMGEN_OT_CreateCam(bpy.types.Operator):
     bl_description = "Generate a camera model with the specified parameters"
 
     def execute(self, context):
+
+        # set add-on directory
         addon_directory = bpy.utils.user_resource(
             'SCRIPTS', "addons")+'/Blender_CamGen/'
         scene = bpy.data.scenes[0]
+
+        # set cycles parameters, i.e. number of bounces, and deactivate clamping
+        data.set_cycles_parameters(scene)
+
+        # get number of vertices for lens creation
         vertex_count_height = scene.camera_generator.prop_vertex_count_height
         vertex_count_radial = scene.camera_generator.prop_vertex_count_radial
-        initialise_cycles(scene, settings)
-        data.objective = get_lens_file(addon_directory)
-        delete_old_camera()
-        import_camera(addon_directory)
-        scene.camera = bpy.data.objects['Orthographic Camera']
-        calculate_iors(data.objective)
-        calculate_aperture(data)
 
-        outer_vertices, outer_lens_index = create_lenses(
-            vertex_count_height, vertex_count_radial, data.objective)
-        create_camera(outer_vertices, outer_lens_index,
-                      vertex_count_radial, scene)
-        set_MLA(data, scene, self, context)
+        # read objective paramters
+        data.objective = get_lens_file(addon_directory)
+
+        # camera setup: calculate IORs ratios and aperture position
+        data.calculate_shader_iors()
+        data.calculate_aperture()
+
+        # delete old camera and calibration pattern
+        delete_old_camera()
+        
+        # load basic camera model and materials from resources file
+        import_basic_camera(addon_directory)
+
+        # set orthographic camera as render camera
+        scene.camera = bpy.data.objects['Orthographic Camera']
+
+        # create lenses and save the outer vertices for housing creation
+        outer_vertices, outer_lens_index = create.lenses(vertex_count_height, vertex_count_radial, data.objective)
+
+        # create housing and aperture
+        create.housing(outer_vertices, outer_lens_index, vertex_count_radial)
+        create.aperture()
+
+        # setup the user defined aperture, i.e. number of blades, scaling and rotation 
+        set_aperture_parameters(scene)
+
+        # setup the user defined MLA parameters
+        set_MLA_parameters(data, scene, self, context)
+
         return {'FINISHED'}
 
 
@@ -339,6 +292,10 @@ class CAMGEN_OT_CreateCalibrationPattern(bpy.types.Operator):
         return {'FINISHED'}
 
 
+# ------------------------------------------------------------------------
+#    Unit test execution operator
+# ------------------------------------------------------------------------
+
 class CAMGEN_OT_RunTests(bpy.types.Operator):
     bl_idname = "camgen.runtests"
     bl_label = "Run tests"
@@ -347,10 +304,11 @@ class CAMGEN_OT_RunTests(bpy.types.Operator):
     def execute(self, context):
         test_main()
         return {'FINISHED'}
+
+
 # ------------------------------------------------------------------------
 #    Camera config save and load operations
 # ------------------------------------------------------------------------
-
 
 class CAMGEN_OT_SaveConfig(bpy.types.Operator, ExportHelper):
     bl_idname = "camgen.saveconfig"
@@ -394,7 +352,6 @@ class CAMGEN_OT_SaveConfig(bpy.types.Operator, ExportHelper):
             writer.writerow(['prop_ml_type_3_f', cg.prop_ml_type_3_f])
 
         return {'FINISHED'}
-
 
 class CAMGEN_OT_LoadConfig(bpy.types.Operator, ImportHelper):
     bl_idname = "camgen.loadconfig"

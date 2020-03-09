@@ -2,19 +2,44 @@ import bpy
 import csv
 import math
 
+# flag for de/activation of debug output and unit tests
+debug: bool = False
+
+# cycles setup required for accurate tracing through multiple lenses
+cycles_settings: dict = {
+    'max_bounces': 128,
+    'diffuse_bounces': 32,
+    'glossy_bounces': 32,
+    'transparent_max_bounces': 64,
+    'transmission_bounces': 65,
+    'sample_clamp_indirect': 0,
+    'blur_glossy': 0
+}
+
+# applies cycles settings
+def set_cycles_parameters(scene: bpy.types.Scene):
+    global cycles_settings
+    for setting in cycles_settings:
+        setattr(scene.cycles, setting, cycles_settings[setting])
+
+
+# initializes global variables
+objective = []
+glass_data_known = False
+aperture_index = -1
+semi_aperture = -1
+objective_list = ()
+objective_list_created = False
+sellmeier_data = {}
+cauchy_data = {}
+
 def init():
     global objective
-    objective = []
     global glass_data_known
-    glass_data_known = False
     global aperture_index
-    aperture_index = -1
     global semi_aperture
-    semi_aperture = -1
     global objective_list
-    objective_list = ()
     global objective_list_created
-    objective_list_created = False
     
     # get add-on folder path
     directory = bpy.utils.user_resource('SCRIPTS', "addons")+'/Blender_CamGen/'
@@ -22,7 +47,6 @@ def init():
     
     # Sellmeier type data:
     global sellmeier_data
-    sellmeier_data = {}
     with open(directory+'sellmeier_materials.csv', newline='') as csvfile:
         reader = csv.reader(csvfile, delimiter=',', quotechar='&')
         for row in reader:
@@ -31,7 +55,6 @@ def init():
 
     # Cauchy type data:  "Glass Type": (C1, C2, C3, C4, C5, C6, IOR)
     global cauchy_data
-    cauchy_data = {}
     with open(directory+'cauchy_materials.csv', newline='') as csvfile:
         reader = csv.reader(csvfile, delimiter=',', quotechar='&')
         for row in reader:
@@ -69,3 +92,48 @@ def calculate_ior(material_name, wavelength):
     if material_name in cauchy_data.keys():
         return calc_cauchy(material_name, wavelength)
     return None
+
+# calculates the ratio of the two material IORs for the refraction shader
+def calculate_shader_iors():
+    global objective
+
+    for i in range(len(objective)-1, 0, -1):
+        objective[i]['ior_ratio'] = objective[i - 1]['ior_wavelength']/objective[i]['ior_wavelength']
+    objective[0]['ior_ratio'] = 1.0/objective[0]['ior_wavelength']
+
+# calculates the aperture position based on the lens data
+def calculate_aperture():
+    global aperture_index
+    global objective
+
+    for i in range(0, len(objective)-1):
+        if objective[i]['material'] == "air" and objective[i+1]['material'] == "air":
+            aperture_index = i+1
+            break
+    aperture_position = 0.0
+
+    if aperture_index != -1:
+        for i in range(0, aperture_index):
+            aperture_position = aperture_position + objective[i]['thickness']
+    else:
+        if objective[0]['radius'] > 0.0:
+            aperture_position = -0.01
+        else:
+            radius = objective[0]['radius']
+            height = objective[0]['semi_aperture']
+            aperture_position = min(-0.01, 1.1 * (radius + math.sqrt(radius*radius - height*height)))
+
+    for i in range(0, len(objective)):
+        objective[i]['position'] = objective[i]['radius'] - aperture_position
+        for j in range(0, i):
+            objective[i]['position'] = objective[i]['position'] + objective[j]['thickness']
+
+# calculates sagitta for a lens with the given parameters
+def calculate_sagitta(half_lens_height: float, surface_radius: float) -> float:
+    if half_lens_height > surface_radius:
+        return surface_radius
+    return surface_radius - math.sqrt(surface_radius * surface_radius - half_lens_height * half_lens_height)
+
+# calculates the number of vertices
+def calculate_number_of_vertices(half_lens_height: float, surface_radius: float, vertex_count_height: int) -> int:
+    return int(vertex_count_height / (math.asin(half_lens_height / surface_radius) / math.pi) + 0.5) * 2

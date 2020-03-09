@@ -305,6 +305,11 @@ class CAMGEN_PT_MLAConfig(bpy.types.Panel):
         row.label(text="Focal length ML type 3")
         row.prop(context.scene.camera_generator, "prop_ml_type_3_f")
 
+
+# ------------------------------------------------------------------------
+#    Unit-Test Subpanel - turn on by setting debug flag in data.py
+# ------------------------------------------------------------------------
+
 class CAMGEN_PT_Tests(bpy.types.Panel):
     bl_idname = "CAMGEN_PT_Tests"
     bl_label = "Tests"

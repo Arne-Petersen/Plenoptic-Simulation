@@ -15,7 +15,7 @@ class TestCameraGenerator(unittest.TestCase):
 
     def test_initialise_cycles(self):
         scene = bpy.data.scenes[0]
-        camera_generator.initialise_cycles(scene, data.cycles_settings)
+        data.set_cycles_parameters(scene)
         for setting in data.cycles_settings:
             self.assertEquals(scene.cycles[setting], data.cycles_settings[setting])
 

@@ -6,8 +6,9 @@ from os.path import isfile, join
 
 from . raytracer import sensor_position_for_distance
 
-from . import data
+from . import calc
 from . import create
+from . import data
 
 # ------------------------------------------------------------------------
 #    Helper functions
@@ -15,12 +16,10 @@ from . import create
 
 # scans the lens folder for csv files containing lens data. The files are then listed in the objective list selector.
 def find_items(self, context):
-    # get add-on folder path
-    addon_directory = bpy.utils.user_resource('SCRIPTS', "addons")+'/Blender_CamGen/'  
     # check if list was already created
     if (not data.objective_list_created):
         # get all files in the lenses dir
-        lensfiles = [f for f in listdir(addon_directory+"Lenses") if isfile(join(addon_directory+"Lenses", f))]
+        lensfiles = [f for f in listdir(data.lens_directory) if isfile(join(data.lens_directory, f))]
         lensfiles.sort()
         result = ()
         counter = 0
@@ -113,7 +112,7 @@ def wavelength(self,context):
             if lens['material'] == 'air' or lens['material'] == 'Air':
                 iors.append(1.0)
             else:
-                new_ior = data.calculate_ior(lens['material'], wavelength_um)
+                new_ior = calc.ior(lens['material'], wavelength_um)
                 if new_ior == None:
                     iors.clear()
                     break

@@ -1,7 +1,12 @@
+# ------------------------------------------------------------------------
+#    Class for object and material creation in Blender
+# ------------------------------------------------------------------------
+
 import bpy
 import math
 import inspect
 
+from . import calc
 from . import data
 
 from typing import Any, List, Dict, Tuple
@@ -21,7 +26,7 @@ def add_circle(config: Dict[str, Any]) -> bpy.types.Object:
     return circle
 
 # creates refraction material for glasses
-def create_glass_material(name: str, ior: float, remove_transform: bool) -> bpy.types.Material:
+def add_glass_material(name: str, ior: float, remove_transform: bool) -> bpy.types.Material:
     glass_material: bpy.types.Material = bpy.data.materials['Glass Material'].copy()
     glass_material.name = f'Glass Material {name}'
     glass_material.node_tree.nodes['IOR'].outputs['Value'].default_value = ior
@@ -47,7 +52,6 @@ def find_outer_vertex(vertices: bpy.types.MeshVertices) -> bpy.types.MeshVertex:
 
 # creates a flat surface for lenses without curvature
 def flat_surface(half_lens_height: float, ior: float, position: float, name: str) -> List[float]:
-    '''Creates a flat surface as part of the lens stack'''
     circle: bpy.types.Object = add_circle({
         'defaults': {
             'vertices': 64,
@@ -61,7 +65,7 @@ def flat_surface(half_lens_height: float, ior: float, position: float, name: str
         'parent': bpy.data.objects['Objective']
     })
 
-    circle.data.materials.append(create_glass_material(name, ior, True))
+    circle.data.materials.append(add_glass_material(name, ior, True))
 
     bpy.ops.object.mode_set(mode="OBJECT")
 
@@ -71,7 +75,6 @@ def flat_surface(half_lens_height: float, ior: float, position: float, name: str
 
 # creates a spherical lens surface
 def lens_surface(vertex_count_height: int, vertex_count_radial: int, surface_radius: float, half_lens_height: float, ior: float, position: float, name: str) -> List[float]:
-    '''Creates a lens surface as part of the lens stack'''
     flip = False
     if surface_radius < 0.0:
         flip = True
@@ -79,7 +82,7 @@ def lens_surface(vertex_count_height: int, vertex_count_radial: int, surface_rad
 
     circle: bpy.types.Object = add_circle({
         'defaults': {
-            'vertices': data.calculate_number_of_vertices(half_lens_height, surface_radius, vertex_count_height),
+            'vertices': calc.number_of_vertices(half_lens_height, surface_radius, vertex_count_height),
             'radius': surface_radius,
             'location': (0, 0, 0)
         }
@@ -93,7 +96,7 @@ def lens_surface(vertex_count_height: int, vertex_count_radial: int, surface_rad
     circle.data.vertices[0].co.x = 0.0
     # select all vertices that should be deleted
     for vertex in circle.data.vertices:
-        if (vertex.co.y < surface_radius - data.calculate_sagitta(half_lens_height, surface_radius)) or (vertex.co.x > 0.0):
+        if (vertex.co.y < surface_radius - calc.sagitta(half_lens_height, surface_radius)) or (vertex.co.x > 0.0):
             vertex.select = True
     bpy.ops.object.mode_set(mode="EDIT")
     bpy.ops.mesh.delete(type='VERT')
@@ -122,7 +125,7 @@ def lens_surface(vertex_count_height: int, vertex_count_radial: int, surface_rad
     circle.name = name
     circle.parent = bpy.data.objects['Objective']
     # add glass material
-    circle.data.materials.append(create_glass_material(name, ior, False))
+    circle.data.materials.append(add_glass_material(name, ior, False))
     # return the outer vertex for housing creation
     bpy.ops.object.mode_set(mode="OBJECT")
     outer_vertex: bpy.types.MeshVertex = find_outer_vertex(circle.data.vertices)
@@ -234,7 +237,7 @@ def aperture():
 
 
 # ------------------------------------------------------------------------
-#    Meta: Multiple component creation
+#    Multiple component creation
 # ------------------------------------------------------------------------
 
 # creates multiple lenses from list and return a list of outer vertices for housing creation
@@ -252,3 +255,14 @@ def lenses(vertex_count_height: int, vertex_count_radial: int, lenses: List[Dict
         outer_vertices.append(lens_surface(vertex_count_height, vertex_count_radial,
                                                   lens['radius'], lens['semi_aperture'], lens['ior_ratio'], lens['position'], lens['name']))
     return outer_vertices, outer_lens_index
+
+# creates a new calibration pattern
+def calibration_pattern():
+    # create new plane
+    bpy.ops.mesh.primitive_plane_add(size=1, rotation=(0, 0.5*3.14159, 0), location=(0, 0, 0))
+    bpy.ops.object.transform_apply()
+    calibration_pattern = bpy.context.active_object
+    calibration_pattern.name = 'Calibration Pattern'
+    # set material
+    calibration_pattern.data.materials.append(bpy.data.materials['Calibration Pattern Material'])
+    calibration_pattern.location[0] = - bpy.data.scenes[0].camera_generator.prop_focal_distance / 100.0

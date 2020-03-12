@@ -5,6 +5,7 @@
 import bpy
 import math
 import mathutils
+import numpy as np
 import inspect
 
 from . import calc
@@ -48,7 +49,7 @@ def find_outer_vertex(vertices: bpy.types.MeshVertices) -> bpy.types.MeshVertex:
     return outer_vertex
 
 # ------------------------------------------------------------------------
-#    Single camera component creation
+#    Single component creation
 # ------------------------------------------------------------------------
 
 # creates a flat surface for lenses without curvature
@@ -76,8 +77,8 @@ def flat_surface(half_lens_height: float, ior: float, position: float, name: str
     outer_vertex: bpy.types.MeshVertex = find_outer_vertex(circle.data.vertices)
     return [outer_vertex.co.x, outer_vertex.co.y, outer_vertex.co.z]
 
-# creates a spherical lens surface
-def lens_surface(vertex_count_height: int, vertex_count_radial: int, surface_radius: float, half_lens_height: float, ior: float, position: float, name: str) -> List[float]:
+# creates a spherical lens surface by rotating a circle section - this leads to non-uniformly distributed vertices!
+def rotational_lens_surface(vertex_count_height: int, vertex_count_radial: int, surface_radius: float, half_lens_height: float, ior: float, position: float, name: str) -> List[float]:
     flip = False
     if surface_radius < 0.0:
         flip = True
@@ -134,9 +135,163 @@ def lens_surface(vertex_count_height: int, vertex_count_radial: int, surface_rad
     outer_vertex: bpy.types.MeshVertex = find_outer_vertex(circle.data.vertices)
     return [outer_vertex.co.x, outer_vertex.co.y, outer_vertex.co.z]
 
+# creates a spherical lens surface with uniformly distributed vertices
+def uniform_lens_surface(edgelength_target: float, sphere_radius: float, half_lens_height: float, ior: float, position: float, name: str):
+    # check lens direction
+    flip = False
+    if sphere_radius < 0.0:
+        flip = True
+        sphere_radius = -1.0 * sphere_radius
+
+    # distance between sphere center and bottom of sphere segment
+    cut_length = calc.sagitta(half_lens_height, sphere_radius) - sphere_radius
+    # radius of most outer slice
+    radius_cut = math.sqrt(math.pow(sphere_radius,2) - math.pow(cut_length,2))
+    # angle between vetors to sphere tip and outmost ring
+    sphere_angle = math.asin(radius_cut / sphere_radius)
+
+    # number of rings (including single-vertex sphere tip)
+    ring_count = math.ceil(sphere_radius * sphere_angle / edgelength_target) + 1
+    # radius of ring as 2D-slice
+    ring_radii = np.zeros(ring_count)
+    ring_heights = np.zeros(ring_count)
+    ringvert_count = np.zeros(ring_count)
+    # number of vertices for each ring
+    for idx in range(0,ring_count):
+        # radius of ring as 2D-slice
+        ring_radii[idx] = sphere_radius * math.sin( sphere_angle * idx /(ring_count-1) )
+        # height from sphere center of ring as 2D-slice
+        ring_heights [idx] = sphere_radius * math.cos( sphere_angle* idx /(ring_count-1) )
+        # number of vertices for each ring
+        ringvert_count[idx] = max(math.ceil(2 * math.pi * ring_radii[idx] / edgelength_target), 1)
+    
+    # approx triangle edge lengths per ring as radian
+    ring_angles = 2 * math.pi / ringvert_count
+
+    # overall vertex count
+    vertcount = int(np.sum(ringvert_count))
+    # 3-space vertex positions
+    vertices = np.zeros((3, vertcount))
+    # per vertex texture map coordinates in uv format
+    vertex_uvs = np.zeros((2, vertcount))
+    # triangle index list, right hand order
+    triangles = np.zeros((3, 4*vertcount)) # worst case: one vertex generates 4 triangles
+
+    # first level is center vertex, radius 0, height = sphere_radius
+    vertices[:, 0] = [0, 0, ring_heights[1]]
+    # debug vertex count
+    writtenverts = 1
+    # for all rings, add vertices corresponding ring vertex count
+    for idx in range(1, ring_count):
+        levelvertcount = int(ringvert_count[idx])
+        for jj in range(0, levelvertcount):
+            # ring has radius ring_radii(idx) and height ring_heights(idx)
+            vertices[:, writtenverts+jj] = [ring_radii[idx] * math.cos(jj * ring_angles[idx]), ring_radii[idx] * math.sin(jj*ring_angles[idx]),ring_heights[idx]]
+            vertex_uvs[:, writtenverts+jj] = [(idx-1)/(ring_count-1) * 0.5 *math.cos(jj*ring_angles[idx]) + 0.5, (idx-1)/(ring_count-1) * 0.5 * math.sin(jj*ring_angles[idx]) + 0.5]
+        writtenverts = writtenverts + levelvertcount
+    if writtenverts != vertcount:
+        raise ValueError('Vertex count missmatch!')
+
+    # for all rings except sphere tip, create triangle indices depending on circle segment vertex distance
+    writtentris = -1
+    for idx in range(1, ring_count):
+        levelvertcount = ringvert_count[idx]
+        levelvertidxoffset = np.sum(ringvert_count[0:idx])
+        lastlevelvertcount = ringvert_count[idx-1]
+        if idx > 1:
+            lastlevelvertidxoffset = np.sum(ringvert_count[0:idx-1])
+        else:
+            # for first run offset is 0 for sphere tip vertex
+            lastlevelvertidxoffset = 0
+
+        # keep track of indices to processed vertices in previous ring
+        lastidx1 = 0
+
+        for jj in range(0, int(levelvertcount)):
+            # index of active vertex edges are drawn from
+            activeVertIdx = levelvertidxoffset + jj
+            # index of first vertex in ring after active one
+            nextActiveVertIdx = levelvertidxoffset + ((jj + 1) % levelvertcount)
+
+            # get projection of active vertex to index range of previous ring
+            gggg = lastlevelvertcount * float(jj) / levelvertcount
+            # idx1 and idx2 are vertices in previous ring closest to active vertex
+            idx1 = math.floor( gggg )
+            # distance between fractional projection and floored index
+            dist = gggg - idx1
+            # make indices relative to previous ring index offset
+            idx2 = (idx1 + 1) % lastlevelvertcount
+            idx1 = lastlevelvertidxoffset + idx1
+            idx2 = lastlevelvertidxoffset + idx2
+
+            writtentris = writtentris+1
+            if idx1 == idx2:
+                # previous ring has only a single vertex
+                triangles[:, writtentris] = [activeVertIdx, nextActiveVertIdx, idx1]
+            else:
+                if lastidx1 == idx1:
+                    # last step has drawn
+                    triangles[:, writtentris] = [activeVertIdx, nextActiveVertIdx, idx2]
+                else:
+                    if dist < 0.5:
+                        # 'left' previous ring vertex is closer to index projection
+                        # create triangle active, right of active, left in previous ring
+                        triangles[:, writtentris] = [activeVertIdx, nextActiveVertIdx, idx1]
+                        # create triangle right of active, right in previous ring, left in previous ring
+                        writtentris = writtentris+1
+                        triangles[:, writtentris] = [nextActiveVertIdx, idx2, idx1]
+                    else:
+                        # 'right' previous ring vertex is closer to index projection
+                        # create triangle active, right of active, right in previous ring
+                        triangles[:, writtentris] = [activeVertIdx, nextActiveVertIdx, idx2]
+                        # create triangle active, right in previous ring, left in previous ring
+                        writtentris = writtentris+1
+                        triangles[:, writtentris] = [activeVertIdx, idx2, idx1]
+            # update last used previous ring indices
+            lastidx1 = idx1
+
+    # create new mesh and copy vertex and triangle data
+    lens_mesh = bpy.data.meshes.new(name)
+    lens_object = bpy.data.objects.new(name, lens_mesh)
+    camera_collection = bpy.data.collections.get("Camera Collection")
+    camera_collection.objects.link(lens_object)
+    bpy.context.view_layer.objects.active = lens_object
+
+    vertices_vec = []
+    triangles_int = []
+
+    for vert_idx in range(0,vertcount):
+        vertices_vec.append(mathutils.Vector((vertices[0,vert_idx],vertices[1,vert_idx],vertices[2,vert_idx])))
+    for tri_idx in range(0, writtentris + 1):
+        triangles_int.append([int(triangles[0,tri_idx]), int(triangles[1,tri_idx]), int(triangles[2,tri_idx])])
+    lens_mesh.from_pydata(vertices_vec,[],triangles_int)
+
+    if flip:
+        lens_object.rotation_euler[1] = math.pi/2
+    else:
+        lens_object.rotation_euler[1] = -math.pi/2
+        bpy.ops.object.mode_set(mode="EDIT")
+        bpy.ops.mesh.flip_normals()
+
+    bpy.ops.object.mode_set(mode="OBJECT")
+    bpy.ops.object.transform_apply()
+    lens_object.location[0] = position
+
+    # set parent
+    lens_object.parent = bpy.data.objects['Objective']
+    # add glass material
+    lens_object.data.materials.append(add_glass_material(name, ior, True))
+
+    # calculate outer vertex
+    outer_vertex_id = int(np.sum(ringvert_count[0:ring_count-1]))
+    if flip:
+        outer_vert = [vertices[2, outer_vertex_id], 0, vertices[0, outer_vertex_id]]
+    else:
+        outer_vert = [-vertices[2, outer_vertex_id], 0, vertices[0, outer_vertex_id]]
+    return outer_vert
+
 # creates the objective and camera housing
 def housing(outer_vertices, outer_lens_index, vertex_count_radial):
-    print(outer_vertices)
     bpy.data.meshes['Housing Mesh'].vertices.add(len(outer_vertices)+3)
     # add outer lens vertices to mesh
     for i in range(0, len(outer_vertices)):
@@ -244,7 +399,7 @@ def aperture():
 # ------------------------------------------------------------------------
 
 # creates multiple lenses from list and return a list of outer vertices for housing creation
-def lenses(vertex_count_height: int, vertex_count_radial: int, lenses: List[Dict[str, Any]]) -> Tuple[List[List[float]], List[int]]:
+def lenses(lens_patch_size: float, vertex_count_height: int, vertex_count_radial: int, lenses: List[Dict[str, Any]]) -> Tuple[List[List[float]], List[int]]:
     outer_vertices, outer_lens_index = [], list(range(len(lenses)))
 
     for index, lens in enumerate(lenses):
@@ -255,8 +410,8 @@ def lenses(vertex_count_height: int, vertex_count_radial: int, lenses: List[Dict
             outer_vertices.append(flat_surface(
                 lens['semi_aperture'], lens['ior_ratio'], lens['position'], lens['name']))
             continue
-        outer_vertices.append(lens_surface(vertex_count_height, vertex_count_radial,
-                                                  lens['radius'], lens['semi_aperture'], lens['ior_ratio'], lens['position'], lens['name']))
+        #outer_vertices.append(rotational_lens_surface(vertex_count_height, vertex_count_radial, lens['radius'], lens['semi_aperture'], lens['ior_ratio'], lens['position'], lens['name']))
+        outer_vertices.append(uniform_lens_surface(lens_patch_size, lens['radius'], lens['semi_aperture'], lens['ior_ratio'], lens['position'], lens['name']))
     return outer_vertices, outer_lens_index
 
 # creates a new calibration pattern

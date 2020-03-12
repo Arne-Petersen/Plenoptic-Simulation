@@ -27,6 +27,14 @@ class CAMGEN_Properties(PropertyGroup):
         update = update.objective_scale
         )
 
+    prop_lens_patch_size: FloatProperty(
+        name = "",
+        description="Edge length of a lens triangle in mm.",
+        default = 1,
+        min = 0,
+        max = 100
+        )
+
     prop_vertex_count_radial: IntProperty(
         name = "",
         description="Latitudinal/radial number of vertices used for lens creation.",
@@ -219,6 +227,9 @@ class CAMGEN_PT_Main(bpy.types.Panel):
         row = layout.row()
         row.label(text="Objective Scale")       
         row.prop(context.scene.camera_generator, "prop_objective_scale")
+        row = layout.row()
+        row.label(text="Lens patch size in mm")
+        row.prop(context.scene.camera_generator, "prop_lens_patch_size")
         row = layout.row()
         row.label(text="Radial Vertices per Lens")       
         row.prop(context.scene.camera_generator, "prop_vertex_count_radial")

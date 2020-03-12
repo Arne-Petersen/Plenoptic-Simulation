@@ -100,7 +100,8 @@ class CAMGEN_OT_CreateCam(bpy.types.Operator):
         # set cycles parameters, i.e. number of bounces, and deactivate clamping
         set_cycles_parameters(scene)
 
-        # get number of vertices for lens creation
+        # get number of vertices and patch size for lens creation
+        lens_patch_size = scene.camera_generator.prop_lens_patch_size / 1000
         vertex_count_height = scene.camera_generator.prop_vertex_count_height
         vertex_count_radial = scene.camera_generator.prop_vertex_count_radial
 
@@ -120,7 +121,7 @@ class CAMGEN_OT_CreateCam(bpy.types.Operator):
         scene.camera = bpy.data.objects['Orthographic Camera']
 
         # create lenses and save the outer vertices for housing creation
-        outer_vertices, outer_lens_index = create.lenses(vertex_count_height, vertex_count_radial, data.objective)
+        outer_vertices, outer_lens_index = create.lenses(lens_patch_size, vertex_count_height, vertex_count_radial, data.objective)
 
         # create housing and aperture
         create.housing(outer_vertices, outer_lens_index, vertex_count_radial)

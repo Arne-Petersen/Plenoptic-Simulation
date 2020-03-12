@@ -32,13 +32,16 @@ glass_data_known = False
 aperture_index = -1
 semi_aperture = -1
 
+# number of vertices for housing creation
+num_radial_housing_vertices = 36
+
 # objective list for drop down lens selector
 objective_list = ()
 objective_list_created = False
 
-# coefficients for dispersion accodring to Sellmeier equation: (B1, B2, B3, C1, C2, C3, IOR)
+# coefficients for dispersion according to Sellmeier equation: (B1, B2, B3, C1, C2, C3, IOR)
 sellmeier_data = {}
-# coefficients for dispersion accodring to Cauchy equation: (C1, C2, C3, C4, C5, C6, IOR)
+# coefficients for dispersion according to Cauchy equation: (C1, C2, C3, C4, C5, C6, IOR)
 cauchy_data = {}
 
 # flag which specifies whether user defined data should be used for camera creation
@@ -50,6 +53,7 @@ def init():
     global glass_data_known
     global aperture_index
     global semi_aperture
+    global num_radial_housing_vertices
     global objective_list
     global objective_list_created
     global use_gui_data

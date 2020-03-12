@@ -4,6 +4,7 @@
 
 import bpy
 import math
+import mathutils
 import inspect
 
 from . import calc
@@ -26,16 +27,16 @@ def add_circle(config: Dict[str, Any]) -> bpy.types.Object:
     return circle
 
 # creates refraction material for glasses
-def add_glass_material(name: str, ior: float, remove_transform: bool) -> bpy.types.Material:
+def add_glass_material(name: str, ior: float, normal_recalculation: bool) -> bpy.types.Material:
     glass_material: bpy.types.Material = bpy.data.materials['Glass Material'].copy()
     glass_material.name = f'Glass Material {name}'
     glass_material.node_tree.nodes['IOR'].outputs['Value'].default_value = ior
 
-    # TODO: Check why the link to the refraction shader is removed!
-    if remove_transform:
-        glass_material.node_tree.links.remove(
-            glass_material.node_tree.nodes['Vector Transform.002'].outputs[0].links[0])
-
+    # delete normal recalculation for flat surface
+    if not normal_recalculation:
+        glass_material.node_tree.links.remove(glass_material.node_tree.nodes['Vector Transform.002'].outputs[0].links[0]) # fresnel link
+        glass_material.node_tree.links.remove(glass_material.node_tree.nodes['Vector Transform.002'].outputs[0].links[0]) # refraction link
+        glass_material.node_tree.links.remove(glass_material.node_tree.nodes['Vector Transform.002'].outputs[0].links[0]) # reflection link
     return glass_material
 
 # finds the outer vertex, i.e. the vertex with the largest z value
@@ -58,19 +59,21 @@ def flat_surface(half_lens_height: float, ior: float, position: float, name: str
             'radius': half_lens_height,
             'fill_type': 'TRIFAN',
             'calc_uvs': False,
-            'location': (position, 0, 0),
+            'location': (0, 0, 0),
             'rotation': (0, -math.pi / 2, 0)
         },
         'name': name,
         'parent': bpy.data.objects['Objective']
     })
 
-    circle.data.materials.append(add_glass_material(name, ior, True))
+    bpy.ops.object.transform_apply()
+    circle.location[0] = position
+
+    circle.data.materials.append(add_glass_material(name, ior, False))
 
     bpy.ops.object.mode_set(mode="OBJECT")
 
     outer_vertex: bpy.types.MeshVertex = find_outer_vertex(circle.data.vertices)
-
     return [outer_vertex.co.x, outer_vertex.co.y, outer_vertex.co.z]
 
 # creates a spherical lens surface
@@ -125,15 +128,15 @@ def lens_surface(vertex_count_height: int, vertex_count_radial: int, surface_rad
     circle.name = name
     circle.parent = bpy.data.objects['Objective']
     # add glass material
-    circle.data.materials.append(add_glass_material(name, ior, False))
+    circle.data.materials.append(add_glass_material(name, ior, True))
     # return the outer vertex for housing creation
     bpy.ops.object.mode_set(mode="OBJECT")
     outer_vertex: bpy.types.MeshVertex = find_outer_vertex(circle.data.vertices)
-
     return [outer_vertex.co.x, outer_vertex.co.y, outer_vertex.co.z]
 
 # creates the objective and camera housing
 def housing(outer_vertices, outer_lens_index, vertex_count_radial):
+    print(outer_vertices)
     bpy.data.meshes['Housing Mesh'].vertices.add(len(outer_vertices)+3)
     # add outer lens vertices to mesh
     for i in range(0, len(outer_vertices)):
@@ -265,4 +268,11 @@ def calibration_pattern():
     calibration_pattern.name = 'Calibration Pattern'
     # set material
     calibration_pattern.data.materials.append(bpy.data.materials['Calibration Pattern Material'])
-    calibration_pattern.location[0] = - bpy.data.scenes[0].camera_generator.prop_focal_distance / 100.0
+    # set location and rotation relative to camera
+    calibration_pattern.location = bpy.data.objects['Camera'].location
+    calibration_pattern.rotation_euler = bpy.data.objects['Camera'].rotation_euler
+    bpy.ops.object.transform_apply(location = True, rotation = False, scale = False, properties = False)
+
+    translation = mathutils.Vector((-bpy.data.scenes[0].camera_generator.prop_focal_distance / 100.0, 0.0, 0.0))
+    translation.rotate(calibration_pattern.rotation_euler) 
+    calibration_pattern.location = translation

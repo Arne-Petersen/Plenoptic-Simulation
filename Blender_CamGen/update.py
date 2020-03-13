@@ -44,6 +44,9 @@ def find_items(self, context):
 def objective_scale(self, context):
     return
 
+def lens_creation_method(self,context):
+    data.lens_creation_method = bpy.data.scenes[0].camera_generator.prop_lens_creation_method
+
 def sensor(self, context):
     cg = bpy.data.scenes[0].camera_generator
     # rescale diffusor plane
@@ -171,11 +174,14 @@ def fresnel_transmission_enabled(self,context):
 
 def mla_enabled(self, context):
     hide = not bpy.data.scenes[0].camera_generator.prop_mla_enabled
-    bpy.data.objects['Two Plane Model'].hide_render = hide
-    bpy.data.objects['Two Plane Model'].hide_viewport = hide
-    bpy.data.objects['MLA'].hide_render = hide
-    bpy.data.objects['MLA'].hide_viewport = hide
-    if not hide:
+    if 'Two Plane Model' in bpy.data.objects:
+        bpy.data.objects['Two Plane Model'].hide_render = hide
+        bpy.data.objects['Two Plane Model'].hide_viewport = hide
+    if 'MLA' in bpy.data.objects:
+        bpy.data.objects['MLA'].hide_render = hide
+        bpy.data.objects['MLA'].hide_viewport = hide
+    data.use_mla = not hide
+    if data.use_mla:
         sensor(self, context)
 
 def microlens_diam(self, context):

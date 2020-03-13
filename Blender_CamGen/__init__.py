@@ -21,13 +21,12 @@ from . camera_generator import CAMGEN_OT_LoadConfig
 from . camera_generator import CAMGEN_OT_SaveConfig
 from . camgen_panel import CAMGEN_Properties
 from . camgen_panel import CAMGEN_PT_Main
-from . camgen_panel import CAMGEN_PT_MLAConfig
 from . camgen_panel import CAMGEN_PT_Tests
 from . import data
 
 from . import test_camera_generator
 
-classes = (CAMGEN_OT_CreateCam, CAMGEN_OT_CreateCalibrationPattern, CAMGEN_OT_LoadConfig, CAMGEN_OT_SaveConfig, CAMGEN_Properties, CAMGEN_PT_Main, CAMGEN_PT_MLAConfig)
+classes = (CAMGEN_OT_CreateCam, CAMGEN_OT_CreateCalibrationPattern, CAMGEN_OT_LoadConfig, CAMGEN_OT_SaveConfig, CAMGEN_Properties, CAMGEN_PT_Main)
 
 def register():
     # init data

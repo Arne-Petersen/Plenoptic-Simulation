@@ -282,6 +282,9 @@ def uniform_lens_surface(edgelength_target: float, sphere_radius: float, half_le
     # add glass material
     lens_object.data.materials.append(add_glass_material(name, ior, True))
 
+    # save min number of outer ring vertices
+    data.num_radial_housing_vertices = min(data.num_radial_housing_vertices, int(ringvert_count[ring_count-1]))
+
     # calculate outer vertex
     outer_vertex_id = int(np.sum(ringvert_count[0:ring_count-1]))
     if flip:
@@ -410,8 +413,13 @@ def lenses(lens_patch_size: float, vertex_count_height: int, vertex_count_radial
             outer_vertices.append(flat_surface(
                 lens['semi_aperture'], lens['ior_ratio'], lens['position'], lens['name']))
             continue
-        #outer_vertices.append(rotational_lens_surface(vertex_count_height, vertex_count_radial, lens['radius'], lens['semi_aperture'], lens['ior_ratio'], lens['position'], lens['name']))
-        outer_vertices.append(uniform_lens_surface(lens_patch_size, lens['radius'], lens['semi_aperture'], lens['ior_ratio'], lens['position'], lens['name']))
+        if data.lens_creation_method == 'UNIFORM':
+            data.num_radial_housing_vertices = 120
+            outer_vertices.append(uniform_lens_surface(lens_patch_size, lens['radius'], lens['semi_aperture'], lens['ior_ratio'], lens['position'], lens['name']))
+        else:
+            data.num_radial_housing_vertices = vertex_count_radial
+            outer_vertices.append(rotational_lens_surface(vertex_count_height, vertex_count_radial, lens['radius'], lens['semi_aperture'], lens['ior_ratio'], lens['position'], lens['name']))
+        
     return outer_vertices, outer_lens_index
 
 # creates a new calibration pattern

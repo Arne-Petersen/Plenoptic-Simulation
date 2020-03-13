@@ -4,7 +4,7 @@ from bpy.props import (BoolProperty,IntProperty,FloatProperty,EnumProperty)
 from bpy.types import (Panel,Menu,Operator,PropertyGroup)
 
 from . import update
-
+from . import data
 
 # ------------------------------------------------------------------------
 #    Properties
@@ -16,6 +16,15 @@ class CAMGEN_Properties(PropertyGroup):
         name = "",
         description = "Choose an objective.",
         items = update.find_items
+        )
+
+    prop_lens_creation_method: EnumProperty(
+        name = "",
+        description = "Lens creation method.",
+        items = [ ('UNIFORM', "Uniform vertex distribution", ""),
+                ('ROTATIONAL', "Rotational Surface", ""),
+               ],
+        update = update.lens_creation_method
         )
 
     prop_objective_scale: FloatProperty(
@@ -228,14 +237,19 @@ class CAMGEN_PT_Main(bpy.types.Panel):
         row.label(text="Objective Scale")       
         row.prop(context.scene.camera_generator, "prop_objective_scale")
         row = layout.row()
-        row.label(text="Lens patch size in mm")
-        row.prop(context.scene.camera_generator, "prop_lens_patch_size")
-        row = layout.row()
-        row.label(text="Radial Vertices per Lens")       
-        row.prop(context.scene.camera_generator, "prop_vertex_count_radial")
-        row = layout.row()
-        row.label(text="Longitudinal Vertices per Lens")       
-        row.prop(context.scene.camera_generator, "prop_vertex_count_height")
+        row.label(text="Lens Creation Method")
+        row.prop(context.scene.camera_generator, "prop_lens_creation_method")
+        if data.lens_creation_method == 'UNIFORM':
+            row = layout.row()
+            row.label(text="Lens patch size in mm")
+            row.prop(context.scene.camera_generator, "prop_lens_patch_size")
+        else:
+            row = layout.row()
+            row.label(text="Radial Vertices per Lens")       
+            row.prop(context.scene.camera_generator, "prop_vertex_count_radial")
+            row = layout.row()
+            row.label(text="Longitudinal Vertices per Lens")       
+            row.prop(context.scene.camera_generator, "prop_vertex_count_height")
         row = layout.row()
         row.operator('camgen.createcam', text="Create Camera Model")
         row = layout.row()
@@ -276,45 +290,32 @@ class CAMGEN_PT_Main(bpy.types.Panel):
         row = layout.row()
         row.label(text="")
         row.operator('camgen.createcalibrationpattern', text="Create Calibration Pattern")
-
-
-# ------------------------------------------------------------------------
-#    MLA-Config Subpanel
-# ------------------------------------------------------------------------
-
-class CAMGEN_PT_MLAConfig(bpy.types.Panel):
-    bl_idname = "CAMGEN_PT_MLAConfig"
-    bl_label = "MLA Config"
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
-    bl_parent_id = "CAMGEN_PT_Main"
-    
-    def draw(self, context):
-        layout = self.layout
         row = layout.row()
         row.label(text="Use MLA")
         row.prop(context.scene.camera_generator, "prop_mla_enabled")
-        row = layout.row()
-        row.label(text="MLA Type")
-        row.prop(context.scene.camera_generator, "prop_mla_type") 
-        row = layout.row()
-        row.label(text="Microlens Diameter in um")
-        row.prop(context.scene.camera_generator, "prop_microlens_diam")
-        row = layout.row()
-        row.label(text="MLA-Sensor Distance in mm")
-        row.prop(context.scene.camera_generator, "prop_mla_sensor_dist")
-        row = layout.row()
-        row.label(text="Use three ML types")
-        row.prop(context.scene.camera_generator, "prop_three_ml_types")
-        row = layout.row()
-        row.label(text="Focal length ML type 1")
-        row.prop(context.scene.camera_generator, "prop_ml_type_1_f")
-        row = layout.row()
-        row.label(text="Focal length ML type 2")
-        row.prop(context.scene.camera_generator, "prop_ml_type_2_f")
-        row = layout.row()
-        row.label(text="Focal length ML type 3")
-        row.prop(context.scene.camera_generator, "prop_ml_type_3_f")
+        if data.use_mla:
+            layout = self.layout
+            row = layout.row()
+            row.label(text="MLA Type")
+            row.prop(context.scene.camera_generator, "prop_mla_type") 
+            row = layout.row()
+            row.label(text="Microlens Diameter in um")
+            row.prop(context.scene.camera_generator, "prop_microlens_diam")
+            row = layout.row()
+            row.label(text="MLA-Sensor Distance in mm")
+            row.prop(context.scene.camera_generator, "prop_mla_sensor_dist")
+            row = layout.row()
+            row.label(text="Use three ML types")
+            row.prop(context.scene.camera_generator, "prop_three_ml_types")
+            row = layout.row()
+            row.label(text="Focal length ML type 1")
+            row.prop(context.scene.camera_generator, "prop_ml_type_1_f")
+            row = layout.row()
+            row.label(text="Focal length ML type 2")
+            row.prop(context.scene.camera_generator, "prop_ml_type_2_f")
+            row = layout.row()
+            row.label(text="Focal length ML type 3")
+            row.prop(context.scene.camera_generator, "prop_ml_type_3_f")
 
 
 # ------------------------------------------------------------------------

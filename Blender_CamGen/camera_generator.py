@@ -124,7 +124,7 @@ class CAMGEN_OT_CreateCam(bpy.types.Operator):
         outer_vertices, outer_lens_index = create.lenses(lens_patch_size, vertex_count_height, vertex_count_radial, data.objective)
 
         # create housing and aperture
-        create.housing(outer_vertices, outer_lens_index, vertex_count_radial)
+        create.housing(outer_vertices, outer_lens_index, data.num_radial_housing_vertices)
         create.aperture()
 
         # setup the user defined aperture, i.e. number of blades, scaling and rotation 

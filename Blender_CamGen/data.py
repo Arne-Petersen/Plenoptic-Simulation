@@ -34,6 +34,7 @@ semi_aperture = -1
 
 # number of vertices for housing creation
 num_radial_housing_vertices = 36
+lens_creation_method = 'UNIFORM'
 
 # objective list for drop down lens selector
 objective_list = ()
@@ -47,6 +48,9 @@ cauchy_data = {}
 # flag which specifies whether user defined data should be used for camera creation
 use_gui_data = False
 
+# flag for disabling the MLA configuration panel
+use_mla = True
+
 # initializes global variables
 def init():
     global objective
@@ -54,6 +58,7 @@ def init():
     global aperture_index
     global semi_aperture
     global num_radial_housing_vertices
+    global lens_creation_method
     global objective_list
     global objective_list_created
     global use_gui_data

@@ -155,138 +155,138 @@ def uniform_lens_surface(edgelength_target: float, sphere_radius: float, half_le
     # radius of ring as 2D-slice
     ring_radii = np.zeros(ring_count)
     ring_heights = np.zeros(ring_count)
-    ringvert_count = np.zeros(ring_count)
+    ring_vert_counts = np.zeros(ring_count)
     # number of vertices for each ring
-    for idx in range(0,ring_count):
+    for ring_idx in range(0,ring_count):
         # radius of ring as 2D-slice
-        ring_radii[idx] = sphere_radius * math.sin( sphere_angle * idx /(ring_count-1) )
+        ring_radii[ring_idx] = sphere_radius * math.sin( sphere_angle * ring_idx /(ring_count-1) )
         # height from sphere center of ring as 2D-slice
-        ring_heights [idx] = sphere_radius * math.cos( sphere_angle* idx /(ring_count-1) )
+        ring_heights [ring_idx] = sphere_radius * math.cos( sphere_angle* ring_idx /(ring_count-1) )
         # number of vertices for each ring
-        ringvert_count[idx] = max(math.ceil(2 * math.pi * ring_radii[idx] / edgelength_target), 1)
+        ring_vert_counts[ring_idx] = max(math.ceil(2 * math.pi * ring_radii[ring_idx] / edgelength_target), 1)
     
     # approx triangle edge lengths per ring as radian
-    ring_angles = 2 * math.pi / ringvert_count
+    ring_angles = 2 * math.pi / ring_vert_counts
 
     # overall vertex count
-    vertcount = int(np.sum(ringvert_count))
+    vert_count = int(np.sum(ring_vert_counts))
     # 3-space vertex positions
-    vertices = np.zeros((3, vertcount))
+    vertices = np.zeros((3, vert_count))
     # per vertex texture map coordinates in uv format
-    vertex_uvs = np.zeros((2, vertcount))
+    vertex_uvs = np.zeros((2, vert_count))
     # triangle index list, right hand order
-    triangles = np.zeros((3, 4*vertcount)) # worst case: one vertex generates 4 triangles
+    triangles = np.zeros((3, 4*vert_count)) # worst case: one vertex generates 4 triangles
 
     # first level is center vertex, radius 0, height = sphere_radius
     vertices[:, 0] = [0, 0, ring_heights[1]]
     # debug vertex count
-    writtenverts = 1
+    written_verts = 1
     # for all rings, add vertices corresponding ring vertex count
-    for idx in range(1, ring_count):
-        levelvertcount = int(ringvert_count[idx])
-        for jj in range(0, levelvertcount):
-            # ring has radius ring_radii(idx) and height ring_heights(idx)
-            vertices[:, writtenverts+jj] = [ring_radii[idx] * math.cos(jj * ring_angles[idx]), ring_radii[idx] * math.sin(jj*ring_angles[idx]),ring_heights[idx]]
-            vertex_uvs[:, writtenverts+jj] = [(idx-1)/(ring_count-1) * 0.5 *math.cos(jj*ring_angles[idx]) + 0.5, (idx-1)/(ring_count-1) * 0.5 * math.sin(jj*ring_angles[idx]) + 0.5]
-        writtenverts = writtenverts + levelvertcount
-    if writtenverts != vertcount:
+    for ring_idx in range(1, ring_count):
+        ring_vert_count = int(ring_vert_counts[ring_idx])
+        for vert_idx in range(0, ring_vert_count):
+            # ring has radius ring_radii(ring_idx) and height ring_heights(ring_idx)
+            vertices[:, written_verts+vert_idx] = [ring_radii[ring_idx] * math.cos(vert_idx * ring_angles[ring_idx]), ring_radii[ring_idx] * math.sin(vert_idx*ring_angles[ring_idx]),ring_heights[ring_idx]]
+            vertex_uvs[:, written_verts+vert_idx] = [(ring_idx-1)/(ring_count-1) * 0.5 *math.cos(vert_idx*ring_angles[ring_idx]) + 0.5, (ring_idx-1)/(ring_count-1) * 0.5 * math.sin(vert_idx*ring_angles[ring_idx]) + 0.5]
+        written_verts = written_verts + ring_vert_count
+    if written_verts != vert_count:
         raise ValueError('Vertex count missmatch!')
 
     # for all rings except sphere tip, create triangle indices depending on circle segment vertex distance
-    writtentris = -1
-    for idx in range(1, ring_count):
-        levelvertcount = ringvert_count[idx]
-        levelvertidxoffset = np.sum(ringvert_count[0:idx])
-        lastlevelvertcount = ringvert_count[idx-1]
-        if idx > 1:
-            lastlevelvertidxoffset = np.sum(ringvert_count[0:idx-1])
+    written_tris = -1
+    for ring_idx in range(1, ring_count):
+        ring_vert_count = ring_vert_counts[ring_idx]
+        ring_vert_id_offset = np.sum(ring_vert_counts[0:ring_idx])
+        last_ring_vert_count = ring_vert_counts[ring_idx-1]
+        if ring_idx > 1:
+            last_ring_vert_idx_offset = np.sum(ring_vert_counts[0:ring_idx-1])
         else:
             # for first run offset is 0 for sphere tip vertex
-            lastlevelvertidxoffset = 0
+            last_ring_vert_idx_offset = 0
 
         # keep track of indices to processed vertices in previous ring
-        lastidx1 = 0
+        last_idx_1 = 0
 
-        for jj in range(0, int(levelvertcount)):
+        for vert_idx in range(0, int(ring_vert_count)):
             # index of active vertex edges are drawn from
-            activeVertIdx = levelvertidxoffset + jj
+            active_vert_idx = ring_vert_id_offset + vert_idx
             # index of first vertex in ring after active one
-            nextActiveVertIdx = levelvertidxoffset + ((jj + 1) % levelvertcount)
+            next_active_vert_idx = ring_vert_id_offset + ((vert_idx + 1) % ring_vert_count)
 
             # get projection of active vertex to index range of previous ring
-            gggg = lastlevelvertcount * float(jj) / levelvertcount
-            # idx1 and idx2 are vertices in previous ring closest to active vertex
-            idx1 = math.floor( gggg )
+            projected_idx = last_ring_vert_count * float(vert_idx) / ring_vert_count
+            # idx_1 and idx_2 are vertices in previous ring closest to active vertex
+            idx_1 = math.floor( projected_idx )
             # distance between fractional projection and floored index
-            dist = gggg - idx1
+            dist = projected_idx - idx_1
             # make indices relative to previous ring index offset
-            idx2 = (idx1 + 1) % lastlevelvertcount
-            idx1 = lastlevelvertidxoffset + idx1
-            idx2 = lastlevelvertidxoffset + idx2
+            idx_2 = (idx_1 + 1) % last_ring_vert_count
+            idx_1 = last_ring_vert_idx_offset + idx_1
+            idx_2 = last_ring_vert_idx_offset + idx_2
 
-            writtentris = writtentris+1
-            if idx1 == idx2:
+            written_tris = written_tris+1
+            if idx_1 == idx_2:
                 # previous ring has only a single vertex
-                triangles[:, writtentris] = [activeVertIdx, nextActiveVertIdx, idx1]
+                triangles[:, written_tris] = [active_vert_idx, next_active_vert_idx, idx_1]
             else:
-                if lastidx1 == idx1:
+                if last_idx_1 == idx_1:
                     # last step has drawn
-                    triangles[:, writtentris] = [activeVertIdx, nextActiveVertIdx, idx2]
+                    triangles[:, written_tris] = [active_vert_idx, next_active_vert_idx, idx_2]
                 else:
                     if dist < 0.5:
                         # 'left' previous ring vertex is closer to index projection
                         # create triangle active, right of active, left in previous ring
-                        triangles[:, writtentris] = [activeVertIdx, nextActiveVertIdx, idx1]
+                        triangles[:, written_tris] = [active_vert_idx, next_active_vert_idx, idx_1]
                         # create triangle right of active, right in previous ring, left in previous ring
-                        writtentris = writtentris+1
-                        triangles[:, writtentris] = [nextActiveVertIdx, idx2, idx1]
+                        written_tris = written_tris+1
+                        triangles[:, written_tris] = [next_active_vert_idx, idx_2, idx_1]
                     else:
                         # 'right' previous ring vertex is closer to index projection
                         # create triangle active, right of active, right in previous ring
-                        triangles[:, writtentris] = [activeVertIdx, nextActiveVertIdx, idx2]
+                        triangles[:, written_tris] = [active_vert_idx, next_active_vert_idx, idx_2]
                         # create triangle active, right in previous ring, left in previous ring
-                        writtentris = writtentris+1
-                        triangles[:, writtentris] = [activeVertIdx, idx2, idx1]
+                        written_tris = written_tris+1
+                        triangles[:, written_tris] = [active_vert_idx, idx_2, idx_1]
             # update last used previous ring indices
-            lastidx1 = idx1
+            last_idx_1 = idx_1
 
-    # create new mesh and copy vertex and triangle data
+    # create new mesh and object
     lens_mesh = bpy.data.meshes.new(name)
     lens_object = bpy.data.objects.new(name, lens_mesh)
     camera_collection = bpy.data.collections.get("Camera Collection")
     camera_collection.objects.link(lens_object)
     bpy.context.view_layer.objects.active = lens_object
-
+    # convert vertex and triangle data to Blender compatible format
     vertices_vec = []
     triangles_int = []
-
-    for vert_idx in range(0,vertcount):
+    for vert_idx in range(0, vert_count):
         vertices_vec.append(mathutils.Vector((vertices[0,vert_idx],vertices[1,vert_idx],vertices[2,vert_idx])))
-    for tri_idx in range(0, writtentris + 1):
+    for tri_idx in range(0, written_tris + 1):
         triangles_int.append([int(triangles[0,tri_idx]), int(triangles[1,tri_idx]), int(triangles[2,tri_idx])])
+    # create mesh from the calculated and converted data
     lens_mesh.from_pydata(vertices_vec,[],triangles_int)
 
+    # rotate the lens and flip normals according to its orientation
     if flip:
         lens_object.rotation_euler[1] = math.pi/2
     else:
         lens_object.rotation_euler[1] = -math.pi/2
         bpy.ops.object.mode_set(mode="EDIT")
         bpy.ops.mesh.flip_normals()
-
+    # set the lens position
     bpy.ops.object.mode_set(mode="OBJECT")
     bpy.ops.object.transform_apply()
     lens_object.location[0] = position
-
     # set parent
     lens_object.parent = bpy.data.objects['Objective']
     # add glass material
     lens_object.data.materials.append(add_glass_material(name, ior, True))
 
-    # save min number of outer ring vertices
-    data.num_radial_housing_vertices = min(data.num_radial_housing_vertices, int(ringvert_count[ring_count-1]))
+    # save min number of outer ring vertices for housing creation
+    data.num_radial_housing_vertices = min(data.num_radial_housing_vertices, int(ring_vert_counts[ring_count-1]))
 
-    # calculate outer vertex
-    outer_vertex_id = int(np.sum(ringvert_count[0:ring_count-1]))
+    # calculate outer vertex for housing creation
+    outer_vertex_id = int(np.sum(ring_vert_counts[0:ring_count-1]))
     if flip:
         outer_vert = [vertices[2, outer_vertex_id], 0, vertices[0, outer_vertex_id]]
     else:

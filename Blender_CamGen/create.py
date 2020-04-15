@@ -72,6 +72,11 @@ def flat_surface(half_lens_height: float, ior: float, position: float, name: str
 
     circle.data.materials.append(add_glass_material(name, ior, False))
 
+    # flip normals
+    bpy.ops.object.mode_set(mode="EDIT")
+    bpy.ops.mesh.select_all(action='SELECT')
+    bpy.ops.mesh.flip_normals()
+
     bpy.ops.object.mode_set(mode="OBJECT")
 
     outer_vertex: bpy.types.MeshVertex = find_outer_vertex(circle.data.vertices)

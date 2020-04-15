@@ -267,4 +267,3 @@ def focal_distance(self, context):
         translation = mathutils.Vector((-bpy.data.scenes[0].camera_generator.prop_focal_distance / 100.0, 0.0, 0.0))
         translation.rotate(calibration_pattern.rotation_euler) 
         calibration_pattern.location = translation
-        print(translation)

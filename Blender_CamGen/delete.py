@@ -69,7 +69,7 @@ def old_camera():
     camera('Orthographic Camera')
     # delete orphan data
     orphan_meshes()
-    orphan_materials
+    orphan_materials()
     orphan_node_groups()
 
 # deletes the old calibration pattern

@@ -57,12 +57,12 @@ def aperture(objective):
         for i in range(0, aperture_index):
             aperture_position = aperture_position + objective[i]['thickness']
     else:
-        if objective[0]['radius'] > 0.0:
-            aperture_position = -0.01
+        if objective[0]['radius'] >= 0.0:
+            aperture_position = -0.001
         else:
             radius = objective[0]['radius']
             height = objective[0]['semi_aperture']
-            aperture_position = min(-0.01, 1.1 * (radius + math.sqrt(radius*radius - height*height)))
+            aperture_position = min(-0.001, 1.1 * (radius + math.sqrt(radius*radius - height*height)))
 
     for i in range(0, len(objective)):
         objective[i]['position'] = objective[i]['radius'] - aperture_position

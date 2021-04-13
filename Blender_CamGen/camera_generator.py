@@ -97,6 +97,9 @@ class CAMGEN_OT_CreateCam(bpy.types.Operator):
     def execute(self, context):
         scene = bpy.data.scenes[0]
 
+        # set cycles as render engine (other engines have not been tested)
+        scene.render.engine='CYCLES'
+
         # set cycles parameters, i.e. number of bounces, and deactivate clamping
         set_cycles_parameters(scene)
 

@@ -1,4 +1,4 @@
-## Camera Generator Add-On for Blender 2.8
+## Camera Generator Add-On for Blender >= 2.8
 
 This add-on enables the user to simply generate conventional or plenoptic camera models which can be used to simulate real cameras more accurately.
 The add-on is an extension of the supplemental material to

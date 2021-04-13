@@ -11,7 +11,7 @@ which you can find in this repository's history. The add-on can also be found on
 
 ### Requirements
 
-+ Blender 2.80 or higher
++ Blender 2.80 or higher (tested with various versions up to 2.91.2)
 + Linux and Windows 10 have been tested
 + Render engine must be set to Cycles
 

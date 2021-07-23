@@ -214,13 +214,13 @@ class CAMGEN_Properties(PropertyGroup):
         update = update.ml_type_3_f
         )
 
-    prop_focal_distance: FloatProperty(
+    prop_focus_distance: FloatProperty(
         name = "",
         description = "Object distance in cm the camera is focused on",
         default = 50,
         min = 1.0,
         max = 1000000.0,
-        update = update.focal_distance
+        update = update.focus_distance
         )
 
 
@@ -298,7 +298,7 @@ class CAMGEN_PT_Main(bpy.types.Panel):
         row.prop(context.scene.camera_generator, "prop_sensor_mainlens_distance")
         row = layout.row()
         row.label(text="Focal distance in cm")
-        row.prop(context.scene.camera_generator, "prop_focal_distance")
+        row.prop(context.scene.camera_generator, "prop_focus_distance")
         row = layout.row()
         row.label(text="")
         row.operator('camgen.createcalibrationpattern', text="Create Calibration Pattern")

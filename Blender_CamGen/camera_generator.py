@@ -79,6 +79,8 @@ def set_MLA_parameters(scene, self, context):
     update.ml_type_1_f(self, context)
     update.ml_type_2_f(self, context)
     update.ml_type_3_f(self, context)
+    update.three_ml_types(self,context)
+    update.mla_enabled(self, context)
 
 
 # applies cycles settings

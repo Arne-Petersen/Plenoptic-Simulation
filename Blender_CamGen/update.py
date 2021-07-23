@@ -276,16 +276,17 @@ def mla_type(self, context):
         cg.prop_three_ml_types = False
         three_ml_types(self,context)
 
-def focal_distance(self, context):
-    cg = bpy.data.scenes[0].camera_generator
-    # calculate the new sensor distance
-    sensor_position = sensor_position_for_distance(cg.prop_focal_distance / 100.0)
-    if sensor_position != -1.0:
-        cg.prop_sensor_mainlens_distance = sensor_position * 1000.0
-        sensor_mainlens_distance(self, context)
-    # set the calibration pattern to new distance
-    if 'Calibration Pattern' in bpy.data.objects:
-        calibration_pattern = bpy.data.objects['Calibration Pattern']
-        translation = mathutils.Vector((-bpy.data.scenes[0].camera_generator.prop_focal_distance / 100.0, 0.0, 0.0))
-        translation.rotate(calibration_pattern.rotation_euler) 
-        calibration_pattern.location = translation
+def focus_distance(self, context):
+    if 'MLA' in bpy.data.objects:
+        cg = bpy.data.scenes[0].camera_generator
+        # calculate the new sensor distance
+        sensor_position = sensor_position_for_distance(cg.prop_focus_distance / 100.0)
+        if sensor_position != -1.0:
+            cg.prop_sensor_mainlens_distance = sensor_position * 1000.0
+            sensor_mainlens_distance(self, context)
+        # set the calibration pattern to new distance
+        if 'Calibration Pattern' in bpy.data.objects:
+            calibration_pattern = bpy.data.objects['Calibration Pattern']
+            translation = mathutils.Vector((-bpy.data.scenes[0].camera_generator.prop_focus_distance / 100.0, 0.0, 0.0))
+            translation.rotate(calibration_pattern.rotation_euler) 
+            calibration_pattern.location = translation

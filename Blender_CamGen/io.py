@@ -99,7 +99,7 @@ def read_cam_params(filepath: str):
         elif property_type == int:
             setattr(cg, read_property[0], int(read_property[1]))
         elif property_type == bool:
-            setattr(cg, read_property[0], bool(read_property[1]))
+            setattr(cg, read_property[0], (read_property[1] == 'True'))
         else:
             setattr(cg, read_property[0], read_property[1])
 

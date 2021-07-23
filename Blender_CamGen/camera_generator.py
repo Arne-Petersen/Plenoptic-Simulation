@@ -22,7 +22,10 @@ def set_aperture_parameters(scene):
 
     if data.aperture_index != -1:
         # rescale opening according to currently set scaling
-        opening_size = 2.0 * data.objective[data.aperture_index]['semi_aperture']
+        if data.use_gui_data:
+            opening_size = min(2.0 * data.objective[data.aperture_index]['semi_aperture'], scene.camera_generator.prop_aperture_size / 1000.0)
+        else:
+            opening_size = 2.0 * data.objective[data.aperture_index]['semi_aperture']
         bpy.data.objects['Opening'].scale[1] = opening_size
         bpy.data.objects['Opening'].scale[2] = opening_size
         scene.camera_generator.prop_aperture_size = opening_size * 1000.0

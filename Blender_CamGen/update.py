@@ -50,29 +50,35 @@ def lens_creation_method(self,context):
 def sensor(self, context):
     cg = bpy.data.scenes[0].camera_generator
     # rescale diffusor plane
-    bpy.data.objects['Diffusor Plane'].scale[1] = cg.prop_sensor_width / 1000.0
-    bpy.data.objects['Diffusor Plane'].scale[2] = cg.prop_sensor_height / 1000.0
+    if 'Diffusor Plane' in bpy.data.objects:
+        bpy.data.objects['Diffusor Plane'].scale[1] = cg.prop_sensor_width / 1000.0
+        bpy.data.objects['Diffusor Plane'].scale[2] = cg.prop_sensor_height / 1000.0
     # adjust render resolution assuming square pixels
-    bpy.data.scenes[0].render.resolution_y = bpy.data.scenes[0].render.resolution_x / bpy.data.objects['Diffusor Plane'].scale[1] * bpy.data.objects['Diffusor Plane'].scale[2]
+    bpy.data.scenes[0].render.resolution_x = cg.prop_sensor_width / cg.prop_pixel_size
+    bpy.data.scenes[0].render.resolution_y = cg.prop_sensor_height / cg.prop_pixel_size
     
     # rescale orthographic camera
-    bpy.data.cameras['Orthographic Camera'].ortho_scale = max(cg.prop_sensor_width, cg.prop_sensor_height) / 1000.0
+    if 'Orthographic Camera' in bpy.data.objects:
+        bpy.data.cameras['Orthographic Camera'].ortho_scale = max(cg.prop_sensor_width, cg.prop_sensor_height) / 1000.0
     
     # rescale MLA to sensor size
-    bpy.data.objects['Two Plane Model'].scale[1] = cg.prop_sensor_width / (1000.0 * bpy.data.objects['Two Plane Model'].dimensions[1])
-    bpy.data.objects['Two Plane Model'].scale[2] = cg.prop_sensor_height / (1000.0 * bpy.data.objects['Two Plane Model'].dimensions[2])
+    if 'Two Plane Model' in bpy.data.objects:
+        bpy.data.objects['Two Plane Model'].scale[1] = cg.prop_sensor_width / (1000.0 * bpy.data.objects['Two Plane Model'].dimensions[1])
+        bpy.data.objects['Two Plane Model'].scale[2] = cg.prop_sensor_height / (1000.0 * bpy.data.objects['Two Plane Model'].dimensions[2])
 
-    temp_object = bpy.context.active_object
-    bpy.context.active_object.select_set(False)
-    bpy.data.objects['Two Plane Model'].select_set(True)
-    bpy.ops.object.transform_apply(location = False, scale = True, rotation = False)
-    bpy.data.objects['Two Plane Model'].select_set(False)
-    temp_object.select_set(True)
+        temp_object = bpy.context.active_object
+        bpy.context.active_object.select_set(False)
+        bpy.data.objects['Two Plane Model'].select_set(True)
+        bpy.ops.object.transform_apply(location = False, scale = True, rotation = False)
+        bpy.data.objects['Two Plane Model'].select_set(False)
+        temp_object.select_set(True)
 
-    bpy.data.materials['MLA Hex Material'].node_tree.nodes['MLA Width in mm'].outputs['Value'].default_value = cg.prop_sensor_width
-    bpy.data.materials['MLA Hex Material'].node_tree.nodes['MLA Height in mm'].outputs['Value'].default_value = cg.prop_sensor_height
-    bpy.data.materials['MLA Rect Material'].node_tree.nodes['MLA Width in mm'].outputs['Value'].default_value = cg.prop_sensor_width
-    bpy.data.materials['MLA Rect Material'].node_tree.nodes['MLA Height in mm'].outputs['Value'].default_value = cg.prop_sensor_height
+    if 'MLA Hex Material' in bpy.data.materials:
+        bpy.data.materials['MLA Hex Material'].node_tree.nodes['MLA Width in mm'].outputs['Value'].default_value = cg.prop_sensor_width
+        bpy.data.materials['MLA Hex Material'].node_tree.nodes['MLA Height in mm'].outputs['Value'].default_value = cg.prop_sensor_height
+    if 'MLA Rect Material' in bpy.data.materials:
+        bpy.data.materials['MLA Rect Material'].node_tree.nodes['MLA Width in mm'].outputs['Value'].default_value = cg.prop_sensor_width
+        bpy.data.materials['MLA Rect Material'].node_tree.nodes['MLA Height in mm'].outputs['Value'].default_value = cg.prop_sensor_height
 
 def sensor_width(self, context):
     sensor(self,context)
@@ -80,24 +86,32 @@ def sensor_width(self, context):
 def sensor_height(self, context):
     sensor(self,context)
 
+def pixel_size(self, context):
+    sensor(self, context)
+
 def sensor_mainlens_distance(self, context):
     cg = bpy.data.scenes[0].camera_generator
     # move sensor
-    bpy.data.objects['Sensor'].location[0] = cg.prop_sensor_mainlens_distance / 1000.0
+    if 'Sensor' in bpy.data.objects:
+        bpy.data.objects['Sensor'].location[0] = cg.prop_sensor_mainlens_distance / 1000.0
     # move MLA
-    bpy.data.objects['MLA'].location[0] = cg.prop_sensor_mainlens_distance / 1000.0 - cg.prop_mla_sensor_dist / 1000.0
+    if 'MLA' in bpy.data.objects:
+        bpy.data.objects['MLA'].location[0] = cg.prop_sensor_mainlens_distance / 1000.0 - cg.prop_mla_sensor_dist / 1000.0
 
 def aperture_blades(self, context):
-    create.aperture()
+    if 'Aperture Plane' in bpy.data.objects:
+        create.aperture()
 
 def aperture_size(self, context):
-    cg = bpy.data.scenes[0].camera_generator
-    bpy.data.objects['Opening'].scale[1] = cg.prop_aperture_size / 1000.0
-    bpy.data.objects['Opening'].scale[2] = cg.prop_aperture_size / 1000.0
-    data.semi_aperture = cg.prop_aperture_size / 1000.0
+    if 'Opening' in bpy.data.objects:
+        cg = bpy.data.scenes[0].camera_generator
+        bpy.data.objects['Opening'].scale[1] = cg.prop_aperture_size / 1000.0
+        bpy.data.objects['Opening'].scale[2] = cg.prop_aperture_size / 1000.0
+        data.semi_aperture = cg.prop_aperture_size / 2000.0
 
 def aperture_angle(self, context):
-    bpy.data.objects['Opening'].rotation_euler[0] = bpy.data.scenes[0].camera_generator.prop_aperture_angle/180.0*math.pi
+    if 'Opening' in bpy.data.objects:
+        bpy.data.objects['Opening'].rotation_euler[0] = bpy.data.scenes[0].camera_generator.prop_aperture_angle/180.0*math.pi
 
 def wavelength(self,context):
     if data.glass_data_known == False:
@@ -185,52 +199,57 @@ def mla_enabled(self, context):
         sensor(self, context)
 
 def microlens_diam(self, context):
-    # set microlens size
-    bpy.data.materials['MLA Hex Material'].node_tree.nodes['Microlens Diameter in um'].outputs['Value'].default_value = bpy.data.scenes[0].camera_generator.prop_microlens_diam
-    bpy.data.materials['MLA Rect Material'].node_tree.nodes['Microlens Diameter in um'].outputs['Value'].default_value = bpy.data.scenes[0].camera_generator.prop_microlens_diam
+    if 'MLA Hex Material' in bpy.data.materials:
+        # set microlens size
+        bpy.data.materials['MLA Hex Material'].node_tree.nodes['Microlens Diameter in um'].outputs['Value'].default_value = bpy.data.scenes[0].camera_generator.prop_microlens_diam
+        bpy.data.materials['MLA Rect Material'].node_tree.nodes['Microlens Diameter in um'].outputs['Value'].default_value = bpy.data.scenes[0].camera_generator.prop_microlens_diam
 
 def mla_sensor_dist(self, context):
-    bpy.data.objects['MLA'].location[0] = bpy.data.objects['Sensor'].location[0] - bpy.data.scenes[0].camera_generator.prop_mla_sensor_dist / 1000.0
+    if 'MLA' in bpy.data.objects:
+        bpy.data.objects['MLA'].location[0] = bpy.data.objects['Sensor'].location[0] - bpy.data.scenes[0].camera_generator.prop_mla_sensor_dist / 1000.0
 
 def ml_type_1_f(self, context):
-    cg = bpy.data.scenes[0].camera_generator
-    # get currently active MLA type
-    is_hex_mla = (cg.prop_mla_type == 'HEX')
-    if is_hex_mla:
-        bpy.data.materials['MLA Hex Material'].node_tree.nodes['Lens 1 f'].outputs['Value'].default_value = cg.prop_ml_type_1_f
-        if not cg.prop_three_ml_types:
+    if 'MLA Hex Material' in bpy.data.materials:
+        cg = bpy.data.scenes[0].camera_generator
+        # get currently active MLA type
+        is_hex_mla = (cg.prop_mla_type == 'HEX')
+        if is_hex_mla:
+            bpy.data.materials['MLA Hex Material'].node_tree.nodes['Lens 1 f'].outputs['Value'].default_value = cg.prop_ml_type_1_f
+            if not cg.prop_three_ml_types:
+                cg.prop_ml_type_2_f = cg.prop_ml_type_1_f
+                cg.prop_ml_type_3_f = cg.prop_ml_type_1_f
+                bpy.data.materials['MLA Hex Material'].node_tree.nodes['Lens 2 f'].outputs['Value'].default_value = cg.prop_ml_type_1_f
+                bpy.data.materials['MLA Hex Material'].node_tree.nodes['Lens 3 f'].outputs['Value'].default_value = cg.prop_ml_type_1_f
+        else:
+            bpy.data.materials['MLA Rect Material'].node_tree.nodes['Microlens f'].outputs['Value'].default_value = cg.prop_ml_type_1_f
             cg.prop_ml_type_2_f = cg.prop_ml_type_1_f
             cg.prop_ml_type_3_f = cg.prop_ml_type_1_f
-            bpy.data.materials['MLA Hex Material'].node_tree.nodes['Lens 2 f'].outputs['Value'].default_value = cg.prop_ml_type_1_f
-            bpy.data.materials['MLA Hex Material'].node_tree.nodes['Lens 3 f'].outputs['Value'].default_value = cg.prop_ml_type_1_f
-    else:
-        bpy.data.materials['MLA Rect Material'].node_tree.nodes['Microlens f'].outputs['Value'].default_value = cg.prop_ml_type_1_f
-        cg.prop_ml_type_2_f = cg.prop_ml_type_1_f
-        cg.prop_ml_type_3_f = cg.prop_ml_type_1_f
 
 def ml_type_2_f(self, context):
-    # get currently active MLA type
-    cg = bpy.data.scenes[0].camera_generator
-    is_hex_mla = (cg.prop_mla_type == 'HEX')
-    if is_hex_mla:
-        if cg.prop_three_ml_types:
-            bpy.data.materials['MLA Hex Material'].node_tree.nodes['Lens 2 f'].outputs['Value'].default_value = cg.prop_ml_type_2_f
+    if 'MLA Hex Material' in bpy.data.materials:
+        # get currently active MLA type
+        cg = bpy.data.scenes[0].camera_generator
+        is_hex_mla = (cg.prop_mla_type == 'HEX')
+        if is_hex_mla:
+            if cg.prop_three_ml_types:
+                bpy.data.materials['MLA Hex Material'].node_tree.nodes['Lens 2 f'].outputs['Value'].default_value = cg.prop_ml_type_2_f
+            else:
+                bpy.data.materials['MLA Hex Material'].node_tree.nodes['Lens 2 f'].outputs['Value'].default_value = cg.prop_ml_type_1_f
         else:
-            bpy.data.materials['MLA Hex Material'].node_tree.nodes['Lens 2 f'].outputs['Value'].default_value = cg.prop_ml_type_1_f
-    else:
-        cg.prop_ml_type_2_f = cg.prop_ml_type_1_f
+            cg.prop_ml_type_2_f = cg.prop_ml_type_1_f
 
 def ml_type_3_f(self, context):
-    # get currently active MLA type
-    cg = bpy.data.scenes[0].camera_generator
-    is_hex_mla = (cg.prop_mla_type == 'HEX')
-    if is_hex_mla:
-        if cg.prop_three_ml_types:
-            bpy.data.materials['MLA Hex Material'].node_tree.nodes['Lens 3 f'].outputs['Value'].default_value = cg.prop_ml_type_3_f
+    if 'MLA Hex Material' in bpy.data.materials:
+        # get currently active MLA type
+        cg = bpy.data.scenes[0].camera_generator
+        is_hex_mla = (cg.prop_mla_type == 'HEX')
+        if is_hex_mla:
+            if cg.prop_three_ml_types:
+                bpy.data.materials['MLA Hex Material'].node_tree.nodes['Lens 3 f'].outputs['Value'].default_value = cg.prop_ml_type_3_f
+            else:
+                bpy.data.materials['MLA Hex Material'].node_tree.nodes['Lens 3 f'].outputs['Value'].default_value = cg.prop_ml_type_1_f
         else:
-            bpy.data.materials['MLA Hex Material'].node_tree.nodes['Lens 3 f'].outputs['Value'].default_value = cg.prop_ml_type_1_f
-    else:
-        cg.prop_ml_type_3_f = cg.prop_ml_type_1_f
+            cg.prop_ml_type_3_f = cg.prop_ml_type_1_f
 
 def three_ml_types(self, context):
     cg = bpy.data.scenes[0].camera_generator
@@ -242,14 +261,17 @@ def three_ml_types(self, context):
             cg.prop_three_ml_types = False
 
 def mla_type(self, context):
+
     cg = bpy.data.scenes[0].camera_generator
     # get currently active MLA type
     is_hex_mla = (cg.prop_mla_type == 'HEX')
     # set materials
     if is_hex_mla:
-        bpy.data.objects['Two Plane Model'].data.materials[0] = bpy.data.materials['MLA Hex Material']
+        if 'Two Plane Model' in bpy.data.objects:
+            bpy.data.objects['Two Plane Model'].data.materials[0] = bpy.data.materials['MLA Hex Material']
     else:
-        bpy.data.objects['Two Plane Model'].data.materials[0] = bpy.data.materials['MLA Rect Material']
+        if 'Two Plane Model' in bpy.data.objects:
+            bpy.data.objects['Two Plane Model'].data.materials[0] = bpy.data.materials['MLA Rect Material']
         ml_type_1_f(self,context)
         cg.prop_three_ml_types = False
         three_ml_types(self,context)

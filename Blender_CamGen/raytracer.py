@@ -1,4 +1,6 @@
 import math
+from scipy.io import savemat
+import numpy as np
 
 from . import data
 
@@ -122,22 +124,44 @@ def trace_single_ray(ray):
     
     return ray
 
+
 # calculate the optimal sensor position for the given set of rays 
 def calculate_sensor_pos(rays):
     if len(rays) == 0:
         return -1
 
-    zeroes = []
+    zeroes = np.array([])
     for ray in rays:
         b = ray[1]-ray[0]*math.tan(ray[2])
         m = math.tan(ray[2])
-        zeroes.append(-b/m)
+        if m != 0:
+            zeroes = np.append(zeroes, [-b/m])
+        else:
+            zeroes = np.append(zeroes, [0])
+
+
     
     circle_position = 0.0
     for zero in zeroes:
         circle_position = circle_position + zero
 
-    return circle_position/float(len(zeroes))
+
+    ######################################   for debugging!  #########################################
+    
+    data_dict = {}
+    data_mat = []
+
+    for i in range(1, len(zeroes)):
+        if zeroes[i] != 0:
+            data_mat.append([rays[i][0],zeroes[i],rays[i][1],0])
+
+    data_dict['rays'] = data_mat
+    savemat('/home/anonym/Projects/Plenoptic_Design/rays.m', data_dict)
+
+    ##################################################################################################
+
+    non_zero_zeroes = zeroes != 0
+    return circle_position/float(len(non_zero_zeroes))
 
 # calculate the optimal sensor position for focusing on the desired distance - returns -1.0 if tracing fails
 def sensor_position_for_distance(distance):

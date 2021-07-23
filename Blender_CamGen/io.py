@@ -5,10 +5,11 @@
 import bpy
 import csv
 
-from os import listdir
+from os import listdir, read
 from os.path import isfile, join
 
 from . import calc
+from . import data
 
 # ------------------------------------------------------------------------
 #    Helper functions
@@ -33,8 +34,17 @@ def write_cam_params(filepath: str):
     # create/open file and save parameters to it
     with open(filepath, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=';', quotechar='&', quoting=csv.QUOTE_MINIMAL)
-        writer.writerow(['prop_objective_list', cg.prop_objective_list])
+
+        lens_file = ""
+        for objective_entry in data.objective_list:
+            if objective_entry[0] == cg.prop_objective_list:
+                lens_file = objective_entry[2]
+                break
+
+        writer.writerow(['objective_file_name', lens_file])
         writer.writerow(['prop_objective_scale', cg.prop_objective_scale])
+        writer.writerow(['prop_lens_creation_method', cg.prop_lens_creation_method])
+        writer.writerow(['prop_lens_patch_size', cg.prop_lens_patch_size])
         writer.writerow(['prop_vertex_count_radial', cg.prop_vertex_count_radial])
         writer.writerow(['prop_vertex_count_height', cg.prop_vertex_count_height])
         writer.writerow(['prop_aperture_blades', cg.prop_aperture_blades])
@@ -42,6 +52,7 @@ def write_cam_params(filepath: str):
         writer.writerow(['prop_aperture_angle', cg.prop_aperture_angle])
         writer.writerow(['prop_sensor_width', cg.prop_sensor_width])
         writer.writerow(['prop_sensor_height', cg.prop_sensor_height])
+        writer.writerow(['prop_pixel_size', cg.prop_pixel_size])
         writer.writerow(['prop_wavelength', cg.prop_wavelength])
         writer.writerow(['prop_focal_distance', cg.prop_focal_distance])
         writer.writerow(['prop_sensor_mainlens_distance', cg.prop_sensor_mainlens_distance])
@@ -63,8 +74,22 @@ def read_cam_params(filepath: str):
     read_data = []
     with open(filepath, newline='') as csvfile:
         reader = csv.reader(csvfile, delimiter=';', quotechar='&')
+
         for row in reader:
             read_data.append(row)
+
+    
+    if read_data[0][0] != 'prop_objective_list':
+        objective_file_name = read_data[0][1]
+        read_data[0] = []
+        for objective_entry in data.objective_list:
+                if objective_entry[2] == objective_file_name:
+                    read_data[0] = ['prop_objective_list', objective_entry[0]]
+                    break
+
+        if len(read_data[0]) < 1:
+            print('Could not find objective in list.')
+            return
 
     for read_property in read_data:
         # check property type and set accordingly casted values

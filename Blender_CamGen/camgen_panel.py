@@ -78,6 +78,15 @@ class CAMGEN_Properties(PropertyGroup):
         update = update.sensor_height
         )
 
+    prop_pixel_size: FloatProperty(
+        name = "",
+        description = "Pixel size in mm.",
+        default = 0.01,
+        min = 0.00001,
+        max = 10000.0,
+        update = update.pixel_size
+        )
+
     prop_sensor_mainlens_distance: FloatProperty(
         name = "",
         description = "Objective-Sensor Distance in mm",
@@ -210,7 +219,7 @@ class CAMGEN_Properties(PropertyGroup):
         description = "Object distance in cm the camera is focused on",
         default = 50,
         min = 1.0,
-        max = 10000.0,
+        max = 1000000.0,
         update = update.focal_distance
         )
 
@@ -272,6 +281,9 @@ class CAMGEN_PT_Main(bpy.types.Panel):
         row = layout.row()
         row.label(text="Sensor Height in mm")
         row.prop(context.scene.camera_generator, "prop_sensor_height")
+        row = layout.row()
+        row.label(text="Pixel size in mm")
+        row.prop(context.scene.camera_generator, "prop_pixel_size")
         row = layout.row()
         row.label(text="Wavelength in nm")
         row.prop(context.scene.camera_generator, "prop_wavelength")

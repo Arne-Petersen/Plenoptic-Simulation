@@ -441,6 +441,6 @@ def calibration_pattern():
     calibration_pattern.rotation_euler = bpy.data.objects['Camera'].rotation_euler
     bpy.ops.object.transform_apply(location = True, rotation = False, scale = False, properties = False)
 
-    translation = mathutils.Vector((-bpy.data.scenes[0].camera_generator.prop_focal_distance / 100.0, 0.0, 0.0))
+    translation = mathutils.Vector((-bpy.data.scenes[0].camera_generator.prop_focus_distance / 100.0, 0.0, 0.0))
     translation.rotate(calibration_pattern.rotation_euler) 
     calibration_pattern.location = translation

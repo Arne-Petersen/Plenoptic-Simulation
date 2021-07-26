@@ -60,7 +60,7 @@ def set_MLA_parameters(scene, self, context):
     # if previous config is loaded from file, the GUI parameters are used for MLA and sensor position
     if data.use_gui_data:
         bpy.data.objects['Sensor'].location[0] = cg.prop_sensor_mainlens_distance / 1000.0
-        bpy.data.objects['MLA'].location[0] = cg.prop_mla_sensor_dist / 1000.0
+        bpy.data.objects['MLA'].location[0] = (cg.prop_sensor_mainlens_distance - cg.prop_mla_sensor_dist) / 1000.0
 
     # otherwise these parameters are calculated
     else:
@@ -81,6 +81,7 @@ def set_MLA_parameters(scene, self, context):
     update.ml_type_3_f(self, context)
     update.three_ml_types(self,context)
     update.mla_enabled(self, context)
+
 
 
 # applies cycles settings

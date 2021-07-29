@@ -128,23 +128,18 @@ def calculate_sensor_pos(rays):
     if len(rays) == 0:
         return -1
 
-    zeroes = np.array([])
+    zeroes = []
     for ray in rays:
         b = ray[1]-ray[0]*math.tan(ray[2])
         m = math.tan(ray[2])
         if m != 0:
-            zeroes = np.append(zeroes, [-b/m])
-        else:
-            zeroes = np.append(zeroes, [0])
-
-
+            zeroes.append(-b/m)
     
     circle_position = 0.0
     for zero in zeroes:
         circle_position = circle_position + zero
 
-    non_zero_zeroes = zeroes != 0
-    return circle_position/float(len(non_zero_zeroes))
+    return circle_position/float(len(zeroes))
 
 # calculate the optimal sensor position for focusing on the desired distance - returns -1.0 if tracing fails
 def sensor_position_for_distance(distance):

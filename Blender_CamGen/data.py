@@ -11,7 +11,7 @@ from .io import read_dispersion_data
 debug: bool = False
 
 # set addon dir
-addon_directory = user_resource('SCRIPTS', "addons")+'/Blender_CamGen/'
+addon_directory = user_resource('SCRIPTS')+'/addons/Blender_CamGen/'
 # set lens directory
 lens_directory = addon_directory+'Lenses'
 

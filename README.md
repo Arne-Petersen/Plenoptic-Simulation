@@ -81,7 +81,7 @@ Now you have a working plenoptic camera model!
 
 1. The lens data source is *Warren J. Smith - Modern Lens Design* and every lens file (located in the lenses folder) contains the radius/thickness/material/index/v-no/semi-aperture data for each lens surface. 
 Furthermore, the files are named according to the following scheme  
-$(general lens type) $(f-stop) $(opening angle)_$(author) $(patent number) $(page number in the aforementioned book).csv
+(general lens type) (f-stop) (opening angle)_(author) (patent number) (page number in the aforementioned book).csv
 2. Currently, only spherical lenses are supported.
 3. If all materials of an objective are known, i.e. they are either listed in the cauchy_materials.csv or sellmeier_materials.csv file, the IOR of every lens can be adjusted according to the desired wavelength. 
 This enables the user to render multiple images for different wavelength and combine the results in order to simulate chromatic abberations.

@@ -1,6 +1,6 @@
 ## Camera Generator Add-On for Blender >= 2.8 (tested up to 3.0.0)
 
-**NOTE**: A new version with many additional features is now available here: [https://gitlab.com/ungetym/blender-camera-generator](https://gitlab.com/ungetym/blender-camera-generator)
+### **NOTE**: A new version with many additional features is now available here: [https://gitlab.com/ungetym/blender-camera-generator](https://gitlab.com/ungetym/blender-camera-generator)
 
 This add-on enables the user to simply generate conventional or plenoptic camera models which can be used to simulate real cameras more accurately.
 The add-on is an extension of the supplemental material to
